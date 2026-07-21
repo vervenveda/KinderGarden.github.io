@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kindergarten Math Cloud — Sovereign Edition</title>
+<style>
+  :root{
+    --bg1:linear-gradient(180deg,#fff4d6 0%, #ffe0f0 50%, #d6f0ff 100%);
+    --ink:#222; --muted:#555; --brand:#ff7a59; --brand2:#6c5ce7; --good:#10b981; --bad:#ef4444; --gold:#f59e0b; --card:#ffffffcc; --radius:24px; --shadow:0 12px 28px rgba(0,0,0,.12);
+  }
+  html,body{height:100%;margin:0}
+  body{font-family:"Comic Sans MS","Baloo 2","Poppins",system-ui,Arial,sans-serif;background:var(--bg1);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box}
+  .app{width:min(1240px,100%);background:var(--card);backdrop-filter:blur(8px);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+  header{display:flex;gap:12px;align-items:center;justify-content:space-between}
+  .title{display:flex;align-items:center;gap:12px}
+  .logo{width:54px;height:54px;border-radius:16px;background:conic-gradient(from 0deg,#ffd166,#f77,#9af,#7ff);box-shadow:inset 0 0 0 6px #fff9}
+  h1{margin:0;font-size:28px;color:var(--ink);letter-spacing:.5px}
+  .sub{color:var(--muted);font-size:12px}
+  nav{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .btn{border:0;padding:14px 16px;border-radius:18px;font-weight:700;cursor:pointer;font-size:16px;background:linear-gradient(135deg,#fff,#f5f5f5);box-shadow:0 6px 0 #00000020;transition:transform .06s ease,box-shadow .06s ease}
+  .btn:active{transform:translateY(2px);box-shadow:0 3px 0 #00000020}
+  .btn.big{font-size:18px;padding:18px 22px}
+  .pill{background:linear-gradient(135deg,#ffd6a5,#ffb5e8)}
+  .pill2{background:linear-gradient(135deg,#a5e3ff,#c7b7ff)}
+  .pill3{background:linear-gradient(135deg,#b8ffcb,#ffd6a5)}
+  .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+  @media (max-width: 920px){ .grid{grid-template-columns:1fr} }
+  .card{background:#fff;border-radius:20px;padding:16px;box-shadow:var(--shadow);position:relative}
+  .card h2{margin:0 0 8px;font-size:22px}
+  .card p{margin:0 0 12px;color:var(--muted)}
+  .lesson-hero{display:flex;gap:12px;align-items:center}
+  .hero-num{width:80px;height:80px;border-radius:22px;display:grid;place-items:center;font-size:34px;font-weight:900;color:#fff;background:radial-gradient(circle at 30% 20%,#fff5,transparent 60%),linear-gradient(135deg,#ff7a59,#f59e0b);box-shadow:inset 0 -6px 12px #0003}
+  .weekbar{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{padding:8px 10px;border-radius:999px;background:#f1f5f9;font-size:13px;cursor:pointer}
+  .chip.active{background:#111827;color:#fff}
+  .flex{display:flex;gap:8px;flex-wrap:wrap}
+  .right{text-align:right}
+  .muted{color:var(--muted)}
+  .stat{background:#111827;color:#fff;border-radius:14px;padding:10px 12px;font-weight:700}
+  .kbd{font-family:ui-monospace,Menlo,monospace;background:#111827;color:#fff;padding:3px 7px;border-radius:7px}
+  .hidden{display:none!important}
+  .divider{height:1px;background:#eee;margin:12px 0}
+  .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0008;z-index:50}
+  .modal.show{display:flex}
+  .sheet{width:min(900px,95%);background:#fff;border-radius:24px;padding:18px;box-shadow:var(--shadow);max-height:90vh;overflow:auto}
+  #confetti{position:fixed;inset:0;pointer-events:none}
+  /* Mini‑games */
+  .gamewrap{display:grid;gap:10px}
+  .tenframe{display:grid;grid-template-columns:repeat(5,48px);grid-template-rows:repeat(2,48px);gap:6px;justify-content:start}
+  .cell{width:48px;height:48px;border:3px solid #111827;border-radius:10px;display:grid;place-items:center;cursor:pointer}
+  .dot{width:26px;height:26px;border-radius:999px;background:#111827}
+  .choices{display:flex;gap:8px;flex-wrap:wrap}
+  .choice{min-width:52px;min-height:52px;border-radius:14px;border:2px dashed #e5e7eb;display:grid;place-items:center;font-weight:900;font-size:20px;cursor:pointer}
+  .choice.good{background:#d1fae5}
+  .choice.bad{background:#fee2e2}
+  .shapes{display:grid;grid-template-columns:repeat(5,80px);gap:8px}
+  .shape{width:80px;height:80px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,#fff,#f7f7f7);box-shadow:0 6px #0001;cursor:pointer}
+  .bin{border:3px dashed #ccc;border-radius:16px;padding:10px;min-height:96px}
+  .notice{background:#fff8e1;border:1px solid #fde68a;padding:8px;border-radius:10px}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<div class="app" id="app">
+  <header>
+    <div class="title"><div class="logo" aria-hidden="true"></div><div><h1>Kindergarten Math Cloud</h1><div class="sub">Sovereign • Offline‑first • Aligned to CCSS K (CC, OA, NBT, MD, G)</div></div></div>
+    <div class="right">
+      <div class="stat" id="statStars">⭐ 0</div>
+    </div>
+  </header>
+
+  <nav>
+    <button class="btn big pill" id="btnStart">Start Today’s Lesson</button>
+    <button class="btn big pill2" id="btnLibrary">Lesson Library</button>
+    <button class="btn big pill3" id="btnQuiz">Weekly Quiz</button>
+    <button class="btn big pill" id="btnTests">Quarterly & Final</button>
+    <button class="btn big pill2" id="btnCenters">Learning Centers</button>
+    <button class="btn big pill3" id="btnRewards">Rewards</button>
+    <button class="btn big pill" id="btnCloud">Cloud</button>
+    <button class="btn big pill2" id="btnTeacher">Teacher Portal</button>
+  </nav>
+
+  <div class="divider"></div>
+
+  <section class="grid">
+    <div class="card" id="cardLesson">
+      <h2>Today’s Lesson</h2>
+      <div class="notice">This app follows evidence‑based early math guidance (IES/WWC) and developmentally appropriate practice (NAEYC) using the CRA sequence: concrete → pictorial → abstract.</div>
+      <div class="lesson-hero">
+        <div class="hero-num" id="heroNum">#</div>
+        <div>
+          <div id="lessonTitle" style="font-weight:800;font-size:18px;">Welcome!</div>
+          <div id="lessonDesc" class="muted">Tap <span class="kbd">Start Today’s Lesson</span> to begin.</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div id="game" class="gamewrap"></div>
+    </div>
+
+    <div class="card" id="cardPlan">
+      <h2>42‑Week Plan (CCSS‑K)</h2>
+      <p class="muted">5 lessons/week • Weekly quiz • Quarter tests (Wks 9,18,27,36) • Final (Wk 42). Domains: K.CC, K.OA, K.NBT.1, K.MD, K.G.</p>
+      <div class="weekbar" id="weekbar"></div>
+      <div class="divider"></div>
+      <div id="planDetail" class="muted">Select a week to view focus & standards.</div>
+    </div>
+  </section>
+</div>
+
+<!-- ======= MODALS ======= -->
+<div class="modal" id="modalCloud">
+  <div class="sheet">
+    <h2>Cloud Vault</h2>
+    <p class="muted">Local‑first: IndexedDB + optional OPFS backup. Export/import JSON and serverless peer sync (WebRTC).
+    </p>
+    <div class="divider"></div>
+    <h3>Vault Controls</h3>
+    <div class="flex">
+      <button class="btn pill" id="btnExport">Export Vault (.json)</button>
+      <button class="btn pill2" id="btnImport">Import Vault</button>
+      <button class="btn pill3" id="btnBackupOPFS">Backup to OPFS</button>
+      <button class="btn" id="btnListOPFS">List OPFS Files</button>
+    </div>
+    <pre id="opfsList" style="white-space:pre-wrap;background:#f8fafc;padding:10px;border-radius:12px;margin-top:10px;max-height:180px;overflow:auto;"></pre>
+
+    <div class="divider"></div>
+    <h3>Peer Sync (serverless)</h3>
+    <p class="muted">Device A: Create Offer → copy to Device B. Device B: Paste Offer → Create Answer → copy back to A → Finalize. Then <b>Send Vault</b>.</p>
+    <div class="flex">
+      <button class="btn" id="btnOffer">Create Offer</button>
+      <button class="btn" id="btnAnswer">Paste Offer → Create Answer</button>
+      <button class="btn" id="btnFinalize">Finalize</button>
+      <button class="btn pill3" id="btnSendVault">Send Vault</button>
+    </div>
+    <textarea id="signalBox" style="width:100%;min-height:120px;margin-top:10px;border-radius:12px;border:1px solid #e5e7eb;padding:10px;font-family:ui-monospace,Menlo,monospace"></textarea>
+    <div id="peerStatus" class="muted" style="margin-top:8px;">Status: idle</div>
+  </div>
+</div>
+
+<div class="modal" id="modalTeacher">
+  <div class="sheet">
+    <h2>Teacher Portal</h2>
+    <p class="muted">Password‑protected gradebook and controls. Map lessons to standards, export grades.</p>
+    <div class="divider"></div>
+    <div id="teacherAuth">
+      <input id="teacherPass" type="password" placeholder="Enter password" style="width:60%;padding:10px;border-radius:12px;border:1px solid #e5e7eb;">
+      <button class="btn pill" id="btnTeacherLogin">Unlock</button>
+      <button class="btn pill2" id="btnTeacherSet">Set / Reset Password</button>
+      <div id="authMsg" class="muted"></div>
+    </div>
+    <div id="teacherPanel" class="hidden">
+      <div class="flex">
+        <button class="btn" id="btnViewGrades">View Gradebook</button>
+        <button class="btn" id="btnExportGrades">Export Grades CSV</button>
+        <button class="btn" id="btnResetStudent">Reset Student</button>
+      </div>
+      <div class="divider"></div>
+      <h3>Standards Map</h3>
+      <div id="stdTableWrap" style="margin-top:10px;max-height:260px;overflow:auto;"></div>
+      <div class="divider"></div>
+      <div id="gradeTableWrap" style="margin-top:10px;max-height:300px;overflow:auto;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modalQuiz">
+  <div class="sheet">
+    <h2 id="quizTitle">Weekly Quiz</h2>
+    <div id="quizArea"></div>
+    <div class="divider"></div>
+    <div class="flex">
+      <button class="btn" id="btnSubmitQuiz">Submit</button>
+      <button class="btn" id="btnExitQuiz">Close</button>
+    </div>
+    <div id="quizMsg" class="muted"></div>
+  </div>
+</div>
+
+<div class="modal" id="modalCenters">
+  <div class="sheet">
+    <h2>Learning Centers (Play‑Based)</h2>
+    <p class="muted">Choose a center: Ten‑Frame, Shape Sort, Pattern Train, Compare Sets, Number Line.</p>
+    <div class="flex">
+      <button class="btn pill" data-center="tenframe">Ten‑Frame</button>
+      <button class="btn pill2" data-center="shapesort">Shape Sort</button>
+      <button class="btn pill3" data-center="pattern">Pattern Train</button>
+      <button class="btn pill" data-center="compare">Compare Sets</button>
+      <button class="btn pill2" data-center="numline">Number Line</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =============================================================
+//  KINDERGARTEN MATH CLOUD — Sovereign, Single‑File (Vanilla JS)
+//  CCSS‑K aligned curriculum + CRA mini‑games + quizzes/tests
+//  Local Vault (IndexedDB via localStorage proxy) + OPFS + P2P
+// =============================================================
+
+const $ = s=>document.querySelector(s);
+const el=(t,a={},kids=[])=>{const n=document.createElement(t);Object.assign(n,a);kids.forEach(k=>n.appendChild(k));return n};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a}
+function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min}
+
+// Simple audio
+function beepOK(){const ctx=new (window.AudioContext||window.webkitAudioContext)();const o=ctx.createOscillator();const g=ctx.createGain();o.type='triangle';o.frequency.value=880;o.connect(g);g.gain.setValueAtTime(0.001,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.15,ctx.currentTime+0.02);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.25);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+0.26)}
+
+// Confetti
+(function confettiInit(){const c=document.createElement('canvas');c.id='confetti';document.body.prepend(c);const ctx=c.getContext('2d');function resize(){c.width=innerWidth;c.height=innerHeight}addEventListener('resize',resize);resize();const pieces=[];function make(){for(let i=0;i<110;i++)pieces.push({x:Math.random()*c.width,y:-10-Math.random()*100,s:4+Math.random()*6,vy:2+Math.random()*3,vx:(Math.random()-.5)*2,r:Math.random()*360})}function draw(){ctx.clearRect(0,0,c.width,c.height);pieces.forEach(p=>{p.y+=p.vy;p.x+=p.vx;p.r+=p.vy;if(p.y>c.height+20){p.y=-10;p.x=Math.random()*c.width}ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r*Math.PI/180);ctx.fillStyle=`hsl(${(p.x+p.y)%360} 90% 60%)`;ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s);ctx.restore()});requestAnimationFrame(draw)}draw();window.party=()=>{make();beepOK()}})();
+
+// ---------------------- CCSS Map for K ----------------------
+const STANDARDS={
+  KCC:['K.CC.A','K.CC.B','K.CC.C'],
+  KOA:['K.OA.A'],
+  KNBT:['K.NBT.1'],
+  KMD:['K.MD.A','K.MD.B'],
+  KG:['K.G.A','K.G.B']
+};
+const STD_TEXT={
+  'K.CC.A':'Know number names and the count sequence (to 100 by ones and tens).',
+  'K.CC.B':'Count to tell the number of objects (answer "how many?").',
+  'K.CC.C':'Compare numbers.',
+  'K.OA.A':'Understand addition as putting together and adding to; subtraction as taking apart and taking from (within 10).',
+  'K.NBT.1':'Compose/decompose 11–19 into ten ones and some further ones (foundations of place value).',
+  'K.MD.A':'Describe and compare measurable attributes (length, weight, capacity).',
+  'K.MD.B':'Classify objects and count the number in categories.',
+  'K.G.A':'Identify and describe shapes (squares, circles, triangles, rectangles, hexagons, cubes, cones, cylinders, spheres).',
+  'K.G.B':'Analyze, compare, create, and compose shapes.'
+};
+
+// ---------------------- Curriculum Generator (42 wks) ----------------------
+function weeks42(){
+  const plan=[];
+  const topics=[
+    {t:'Number Names & Count to 10',std:['K.CC.A','K.CC.B']},
+    {t:'Counting Objects & "How many?"',std:['K.CC.B']},
+    {t:'Compare Numbers (more/less/equal)',std:['K.CC.C']},
+    {t:'Count to 20 + Ten‑Frame',std:['K.CC.A','K.CC.B']},
+    {t:'Number Writing 0–20',std:['K.CC.A']},
+    {t:'Addition Stories within 5',std:['K.OA.A']},
+    {t:'Subtraction Stories within 5',std:['K.OA.A']},
+    {t:'Patterns AB/ABB',std:['K.MD.B']},
+    {t:'Quarter 1 Review & Test',std:['K.CC','K.OA']},
+    {t:'Compose/Decompose within 10',std:['K.OA.A']},
+    {t:'Measurement: Longer/Shorter',std:['K.MD.A']},
+    {t:'Measurement: Heavier/Lighter',std:['K.MD.A']},
+    {t:'Classify & Count',std:['K.MD.B']},
+    {t:'Shapes: Identify & Describe',std:['K.G.A']},
+    {t:'Shapes: Compose Shapes',std:['K.G.B']},
+    {t:'Addition within 10 (5+5)',std:['K.OA.A']},
+    {t:'Subtraction within 10',std:['K.OA.A']},
+    {t:'Quarter 2 Review & Test',std:['K.OA','K.MD','K.G']},
+    {t:'Count to 50; by Tens',std:['K.CC.A']},
+    {t:'Teen Numbers 11–19 (make ten)',std:['K.NBT.1']},
+    {t:'Ten‑Frame Teen Numbers',std:['K.NBT.1']},
+    {t:'Number Line 0–20',std:['K.CC.A','K.CC.C']},
+    {t:'Word Problems (Add/Sub within 10)',std:['K.OA.A']},
+    {t:'Data: Picture Graphs (simple)',std:['K.MD.B']},
+    {t:'Shapes in the World (positional)',std:['K.G.A']},
+    {t:'Compose with Pattern Blocks',std:['K.G.B']},
+    {t:'Quarter 3 Review & Test',std:['All']},
+    {t:'Fluency within 5',std:['K.OA.A']},
+    {t:'Fluency within 10',std:['K.OA.A']},
+    {t:'Compare to 20',std:['K.CC.C']},
+    {t:'Measurement: Capacity',std:['K.MD.A']},
+    {t:'Sorting & Classify (multi‑attribute)',std:['K.MD.B']},
+    {t:'Count to 100 (by 1s & 10s)',std:['K.CC.A']},
+    {t:'Review: Place Value Foundations',std:['K.NBT.1']},
+    {t:'Review: Shapes & Compose',std:['K.G.A','K.G.B']},
+    {t:'Review: Data/Graphs',std:['K.MD.B']},
+    {t:'Quarter 4 Review & Test',std:['All']},
+    {t:'Spiral Review & Games',std:['All']},
+    {t:'Final Exam & Celebration',std:['All']},
+  ];
+  for(let w=1;w<=42;w++){
+    const idx=Math.min(w-1,topics.length-1);
+    const topic=topics[idx];
+    const lessons=Array.from({length:5},(_,d)=>({id:`W${w}D${d+1}`,title:`Week ${w} • Day ${d+1}`,target:targetFor(topic,w,d+1),std:topic.std}));
+    plan.push({week:w,topic:topic.t,std:topic.std,lessons});
+  }
+  return plan;
+}
+function targetFor(topic,week,day){
+  // Assign a mini‑game by theme
+  const map={
+    count:'count', ten:'tenframe', compare:'compare', add:'add', sub:'sub', shapes:'shapes', measure:'measure', classify:'classify', pattern:'pattern', nbt:'tenframe', graph:'graph', numline:'numline'
+  };
+  let kind='count'; const t=topic.t;
+  if(/Ten-?Frame|Compose|Teen|NBT/.test(t)) kind='tenframe';
+  else if(/Compare|more|less/i.test(t)) kind='compare';
+  else if(/Addition/i.test(t)) kind='add';
+  else if(/Subtraction/i.test(t)) kind='sub';
+  else if(/Shape/i.test(t)) kind='shapes';
+  else if(/Measure|Longer|Heavier|Capacity/.test(t)) kind='measure';
+  else if(/Classify|Sorting/i.test(t)) kind='classify';
+  else if(/Pattern/.test(t)) kind='pattern';
+  else if(/Number Line/.test(t)) kind='numline';
+  else if(/Graph/.test(t)) kind='graph';
+  else kind='count';
+  return {kind, text:topic.t};
+}
+const CURRICULUM=weeks42();
+
+// ---------------------- Vault ----------------------
+const Vault={ key:'k-math-cloud.v1', data:{meta:{created:Date.now(),version:1},student:'Student',stars:0,progress:{},grades:[],admin:{hash:null}},
+  load(){try{const raw=localStorage.getItem(this.key);if(raw){this.data=JSON.parse(raw)}}catch(e){};updateStars()},
+  save(){try{localStorage.setItem(this.key,JSON.stringify(this.data))}catch(e){}},
+  awardStars(n){this.data.stars=(this.data.stars||0)+n;updateStars();this.save();party()},
+  logGrade(entry){this.data.grades.push({...entry,ts:Date.now()});this.save()},
+  snapshot(){return JSON.stringify(this.data,null,2)},
+  import(json){try{const o=JSON.parse(json);if(o&&o.meta){this.data=o;this.save();updateStars();return true}}catch(e){return false}return false}
+};
+function updateStars(){$('#statStars').textContent=`⭐ ${Vault.data.stars||0}`}
+
+// ---------------------- OPFS ----------------------
+const OPFS={root:null,async init(){if(!('storage' in navigator)||!('getDirectory' in navigator.storage))return false;try{this.root=await navigator.storage.getDirectory();return true}catch{return false}},async writeText(name,text){if(!this.root)return false;const h=await this.root.getFileHandle(name,{create:true});const w=await h.createWritable();await w.write(new Blob([text],{type:'application/json'}));await w.close();return true},async list(){if(!this.root)return[];const out=[];for await(const [name,handle] of this.root.entries()){out.push(name)}return out}};
+
+// ---------------------- P2P ----------------------
+function PeerLink(){const pc=new RTCPeerConnection({iceServers:[]});let dc=null,open=false;const status=$('#peerStatus');const set=t=>status.textContent='Status: '+t;pc.onicecandidate=e=>{if(e.candidate)return;$('#signalBox').value=JSON.stringify(pc.localDescription)};pc.ondatachannel=e=>{dc=e.channel;bind()};pc.onconnectionstatechange=()=>set(pc.connectionState);function bind(){if(!dc)return;dc.onopen=()=>{open=true;set('connected')};dc.onclose=()=>{open=false;set('closed')};dc.onmessage=ev=>{try{const p=JSON.parse(ev.data);if(p.type==='vault'){const ok=Vault.import(p.payload);alert(ok?'Vault received ✓':'Import failed')}}catch{}}}
+  return {async makeOffer(){dc=pc.createDataChannel('sync');bind();const offer=await pc.createOffer();await pc.setLocalDescription(offer);set('offer created')},async makeAnswer(){const off=JSON.parse($('#signalBox').value||'{}');await pc.setRemoteDescription(off);const ans=await pc.createAnswer();await pc.setLocalDescription(ans);await sleep(200);$('#signalBox').value=JSON.stringify(pc.localDescription);set('answer created')},async finalize(){const ans=JSON.parse($('#signalBox').value||'{}');await pc.setRemoteDescription(ans);set('finalizing…')},sendVault(){if(!open)return alert('Not connected');dc.send(JSON.stringify({type:'vault',payload:Vault.snapshot()}));set('sent vault')}}}
+
+// ---------------------- Mini‑Games (CRA) ----------------------
+function renderLesson(target){const g=$('#game');g.innerHTML='';$('#lessonDesc').textContent=target.text;$('#heroNum').textContent='K';
+  const map={count:gameCount,tenframe:gameTenFrame,compare:gameCompare,add:gameAdd,sub:gameSub,shapes:gameShapes,measure:gameMeasure,classify:gameClassify,pattern:gamePattern,numline:gameNumline,graph:gameGraph};
+  (map[target.kind]||gameCount)(g);
+}
+
+// Count objects (pictorial → abstract)
+function gameCount(g){const n=randInt(4,12);const row=el('div',{className:'choices'});const pict=el('div');pict.innerHTML='<div class="flex" style="gap:6px;flex-wrap:wrap">'+Array.from({length:n},()=>'<span style="display:inline-block;width:28px;height:28px;border-radius:9px;background:#111827"></span>').join('')+'</div>';
+  const opts=shuffle([n,randInt(0,12),randInt(0,12),randInt(0,12)]);
+  opts.forEach(v=>{const c=el('div',{className:'choice',textContent:v});c.onclick=()=>{if(v===n){c.classList.add('good');Vault.awardStars(1)}else c.classList.add('bad');};row.append(c)});
+  g.append(el('div',{innerHTML:'<b>How many dots?</b>'}),pict,row)
+}
+
+// Ten‑frame / teen numbers (concrete with virtual counters)
+function gameTenFrame(g){const target=randInt(6,10);const teen=10+randInt(1,9);const mode=Math.random()<0.5?'within10':'teen';
+  const tf=el('div',{className:'tenframe'});const cells=[];for(let i=0;i<10;i++){const c=el('div',{className:'cell'});c.onclick=()=>{if(!c.firstChild)c.append(el('div',{className:'dot'}));else c.innerHTML=''};cells.push(c);tf.append(c)}
+  const prompt=el('div',{innerHTML: mode==='within10'?`<b>Fill</b> the ten‑frame with <b>${target}</b> counters.`:`Make the teen number <b>${teen}</b> (ten frame + extra counters).`});
+  const check=el('button',{className:'btn pill',textContent:'Check'});
+  check.onclick=()=>{const filled=cells.filter(c=>c.firstChild).length;let ok=false; if(mode==='within10'){ok=filled===target}else{ok=filled===10};
+    if(ok){Vault.awardStars(2);prompt.innerHTML+=' ✓';}else{prompt.innerHTML+=' — try again'};
+  };
+  g.append(prompt,tf,check);
+  if(mode==='teen'){
+    const extraWrap=el('div',{className:'choices'});
+    const opts=shuffle([teen-10,teen-9,teen-8,teen-11]).slice(0,4); // simple choices near truth
+    opts.forEach(v=>{const c=el('div',{className:'choice',textContent:`+ ${v}`});c.onclick=()=>{c.classList.toggle('good')};extraWrap.append(c)});
+    g.append(el('div',{className:'muted',textContent:'Choose how many extra ones to make the teen number.'}),extraWrap)
+  }
+}
+
+// Compare sets (pictorial comparison)
+function gameCompare(g){const a=randInt(3,12),b=randInt(3,12);const mk=n=>'<span style="display:inline-block;width:18px;height:18px;border-radius:6px;background:#111827;margin:2px"></span>'.repeat(n);
+  const left=el('div',{innerHTML:mk(a)});const right=el('div',{innerHTML:mk(b)});
+  const row=el('div',{className:'choices'});
+  ['<','>','='].forEach(sym=>{const c=el('div',{className:'choice',textContent:sym});c.onclick=()=>{const truth=a<b?'<':a>b?'>':'=';if(sym===truth){c.classList.add('good');Vault.awardStars(1)}else c.classList.add('bad')};row.append(c)});
+  g.append(el('div',{innerHTML:'<b>Compare:</b>'}),el('div',{className:'flex',children:[left,right]}),row)
+}
+
+// Addition with dots (within 10)
+function gameAdd(g){const x=randInt(0,5),y=randInt(0,5),ans=x+y;const mk=n=>'<span style="display:inline-block;width:18px;height:18px;border-radius:6px;background:#111827;margin:2px"></span>'.repeat(n);
+  const row=el('div',{className:'choices'});const opts=shuffle([ans,randInt(0,10),randInt(0,10),randInt(0,10)]);
+  opts.forEach(v=>{const c=el('div',{className:'choice',textContent:v});c.onclick=()=>{if(v===ans){c.classList.add('good');Vault.awardStars(2)}else c.classList.add('bad')};row.append(c)});
+  g.append(el('div',{innerHTML:`<b>Add:</b> ${x} + ${y} = ?`}),el('div',{className:'flex',children:[el('div',{innerHTML:mk(x)}),el('div',{innerHTML:mk(y)})]}),row)
+}
+
+// Subtraction with dots (within 10)
+function gameSub(g){const x=randInt(1,10),y=randInt(0,Math.min(5,x));const ans=x-y;const mk=n=>'<span style="display:inline-block;width:18px;height:18px;border-radius:6px;background:#111827;margin:2px"></span>'.repeat(n);
+  const row=el('div',{className:'choices'});const opts=shuffle([ans,randInt(0,10),randInt(0,10),randInt(0,10)]);
+  opts.forEach(v=>{const c=el('div',{className:'choice',textContent:v});c.onclick=()=>{if(v===ans){c.classList.add('good');Vault.awardStars(2)}else c.classList.add('bad')};row.append(c)});
+  g.append(el('div',{innerHTML:`<b>Subtract:</b> ${x} − ${y} = ?`}),el('div',{innerHTML:mk(x)}),row)
+}
+
+// Shapes identify / compose
+function gameShapes(g){const shapes=['circle','square','triangle','rectangle','hexagon'];const target=shapes[randInt(0,shapes.length-1)];
+  const drawShape=(s)=>{const d=el('div',{className:'shape'});const inner=el('div');inner.style.width='48px';inner.style.height='48px';inner.style.background='#111827';
+    if(s==='circle'){inner.style.borderRadius='999px'}
+    if(s==='triangle'){inner.style.width='0';inner.style.height='0';inner.style.borderLeft='24px solid transparent';inner.style.borderRight='24px solid transparent';inner.style.borderBottom='48px solid #111827';inner.style.background='transparent'}
+    if(s==='rectangle'){inner.style.width='60px';inner.style.height='36px'}
+    if(s==='hexagon'){inner.style.width='54px';inner.style.height='30px';inner.style.background='transparent';inner.style.position='relative';inner.innerHTML='<div style="position:absolute;left:0;right:0;margin:auto;top:-15px;width:34px;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:15px solid #111827"></div><div style="position:absolute;left:0;right:0;margin:auto;bottom:-15px;width:34px;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:15px solid #111827"></div><div style="position:absolute;left:0;right:0;margin:auto;top:0;width:54px;height:30px;background:#111827"></div>'}
+    d.append(inner);d.dataset.shape=s;return d};
+  const instruct=el('div',{innerHTML:`<b>Find all the ${target}s</b>`});
+  const wrap=el('div',{className:'shapes'});
+  shuffle([...shapes,...shapes]).forEach(s=>wrap.append(drawShape(s)));
+  wrap.querySelectorAll('.shape').forEach(sh=>sh.onclick=()=>{if(sh.dataset.shape===target){sh.style.background='#d1fae5';Vault.awardStars(1)}else sh.style.background='#fee2e2'});
+  g.append(instruct,wrap)
+}
+
+// Measurement compare
+function gameMeasure(g){const a=randInt(3,9),b=randInt(3,9);const bar=n=>`<div style="height:20px;width:${n*18}px;background:#111827;border-radius:9px"></div>`;const row=el('div',{className:'choices'});
+  ['longer','shorter','same'].forEach(k=>{const c=el('div',{className:'choice',textContent:k});c.onclick=()=>{const truth=a>b?'A is longer':a<b?'A is shorter':'same';const pick=k==='same'?'same':`A is ${k}`;if(pick===truth){c.classList.add('good');Vault.awardStars(1)}else c.classList.add('bad')};row.append(c)});
+  g.append(el('div',{innerHTML:'<b>Which describes A vs B?</b>'}),el('div',{className:'flex',children:[el('div',{innerHTML:bar(a)}),el('div',{innerHTML:bar(b)})]}),row)
+}
+
+// Classify objects
+function gameClassify(g){const colors=['#111827','#ff7a59','#6c5ce7'];const items=shuffle(colors.concat(colors,colors));const bins=colors.map(c=>{const b=el('div',{className:'bin'});b.dataset.c=c;return b});
+  const row=el('div',{className:'flex'});bins.forEach(b=>row.append(b));
+  const pool=el('div',{className:'flex'});
+  items.forEach(c=>{const it=el('div',{className:'shape'});const sq=el('div');sq.style.width='36px';sq.style.height='36px';sq.style.background=c;sq.style.borderRadius='8px';it.append(sq);it.onclick=()=>{const target=bins[randInt(0,bins.length-1)];target.append(it);Vault.awardStars(1)};pool.append(it)});
+  g.append(el('div',{innerHTML:'<b>Sort by color</b>'}),pool,row)
+}
+
+// Pattern train (AB/ABB)
+function gamePattern(g){const base=['🔴','🔵'];const mode=Math.random()<0.5?'AB':'ABB';const seq=[];for(let i=0;i<6;i++){seq.push(base[i%2])}
+  const show=el('div',{style:'font-size:32px'},[]);show.textContent = mode==='AB'? '🔴🔵🔴🔵🔴 ?' : '🔴🔵🔵🔴🔵🔵🔴 ?';
+  const row=el('div',{className:'choices'});['🔴','🔵'].forEach(v=>{const c=el('div',{className:'choice',textContent:v});c.onclick=()=>{const correct=mode==='AB'?'🔴':'🔵';if(v===correct){c.classList.add('good');Vault.awardStars(1)}else c.classList.add('bad')};row.append(c)});
+  g.append(el('div',{innerHTML:`<b>Complete the ${mode} pattern</b>`}),show,row)
+}
+
+// Number line 0–20
+function gameNumline(g){const a=randInt(0,18);const b=a+randInt(1,2);const ans=b-a;const line=el('div');line.style.display='flex';line.style.alignItems='center';line.style.gap='6px';for(let i=0;i<=20;i++){const t=el('div',{textContent:i,style:'width:24px;text-align:center'});line.append(t)}
+  const row=el('div',{className:'choices'});shuffle([ans,ans+1,ans-1,ans+2]).forEach(v=>{const c=el('div',{className:'choice',textContent:v});c.onclick=()=>{if(v===ans){c.classList.add('good');Vault.awardStars(2)}else c.classList.add('bad')};row.append(c)});
+  g.append(el('div',{innerHTML:`<b>Hops from ${a} to ${b}</b>`}),line,row)
+}
+
+// Simple graph (classify & count)
+function gameGraph(g){const cats=['🍎','🍌','🍇'];const counts=cats.map(()=>randInt(1,5));const row=el('div',{className:'choices'});
+  const bars=el('div',{className:'flex'});counts.forEach((n,i)=>{const bar=el('div');bar.innerHTML=`<div style="text-align:center">${cats[i]}</div><div style="background:#111827;height:${n*16}px;width:24px;border-radius:8px"></div><div style="text-align:center">${n}</div>`;bars.append(bar)});
+  const total=counts.reduce((a,b)=>a+b,0);shuffle([total,total+1,total-1,Math.max(...counts)]).forEach(v=>{const c=el('div',{className:'choice',textContent:v});c.onclick=()=>{if(v===total){c.classList.add('good');Vault.awardStars(2)}else c.classList.add('bad')};row.append(c)});
+  g.append(el('div',{innerHTML:'<b>How many fruits in all?</b>'}),bars,row)
+}
+
+// ---------------------- Quiz/Test Engine ----------------------
+function mcqNumber(){const correct=randInt(0,20);const pool=new Set([correct]);while(pool.size<4)pool.add(randInt(0,20));const options=shuffle([...pool]);return{kind:'mcq',prompt:`Which number is ${correct}?`,options,answer:options.indexOf(correct)}}
+function mcqCount(){const n=randInt(1,10);const dots='<span style="display:inline-block;width:16px;height:16px;border-radius:6px;background:#111827;margin:3px"></span>'.repeat(n);const opts=shuffle([n,randInt(0,10),randInt(0,10),randInt(0,10)]);return{kind:'mcqHtml',prompt:`How many dots? ${dots}`,options:opts.map(String),answer:opts.indexOf(n)}}
+function mcqCompare(){const a=randInt(0,10),b=randInt(0,10);const truth=a<b?'<':a>b?'>':'=';const opts=shuffle(['<','>','=','?']);return{kind:'mcq',prompt:`Compare: ${a} __ ${b}`,options:opts,answer:opts.indexOf(truth)}}
+function mcqAdd(){const x=randInt(0,5),y=randInt(0,5),ans=x+y;const opts=shuffle([ans,ans+1,ans-1,randInt(0,10)]);return{kind:'mcq',prompt:`${x} + ${y} = ?`,options:opts,answer:opts.indexOf(ans)}}
+function mcqSub(){const x=randInt(1,10),y=randInt(0,Math.min(5,x)),ans=x-y;const opts=shuffle([ans,ans+1,ans-1,randInt(0,10)]);return{kind:'mcq',prompt:`${x} − ${y} = ?`,options:opts,answer:opts.indexOf(ans)}}
+function mcqShapes(){const opts=['circle','square','triangle','rectangle'];const t=opts[randInt(0,opts.length-1)];return{kind:'mcq',prompt:`Which is a ${t}?`,options:shuffle(opts),answer:opts.indexOf(t)}}
+function buildQuiz(n=10){const bank=[mcqNumber,mcqCount,mcqCompare,mcqAdd,mcqSub,mcqShapes];const items=Array.from({length:n},()=>bank[randInt(0,bank.length-1)]());return items}
+function renderQuiz(items,container){container.innerHTML='';items.forEach((q,i)=>{const wrap=el('div',{className:'card',style:'margin:10px 0;padding:12px'});wrap.append(el('div',{innerHTML:`<b>Q${i+1}.</b> ${q.prompt}`}));const row=el('div',{className:'flex',style:'margin-top:8px'});q.options.forEach((opt,idx)=>{const b=el('button',{className:'btn',textContent:String(opt)});b.onclick=()=>{[...row.children].forEach(ch=>ch.classList.remove('pill','pill2'));b.classList.add('pill');q.choice=idx};row.append(b)});wrap.append(row);container.append(wrap)})}
+function gradeQuiz(items){let ok=0;items.forEach(q=>{if(q.choice===q.answer)ok++});const pct=Math.round((ok/items.length)*100);return{ok,total:items.length,pct}}
+
+// ---------------------- Teacher / Standards Table ----------------------
+function asCSV(rows){return rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\n')}
+function renderStandardsTable(){const rows=[["Code","Description"]];Object.keys(STD_TEXT).forEach(k=>rows.push([k,STD_TEXT[k]]));const html=`<table style="width:100%;border-collapse:collapse">${rows.map((r,i)=>`<tr>${r.map(c=>`<td style=\"border:1px solid #eee;padding:6px;${i?'' :'font-weight:700;background:#f8fafc'}\">${c}</td>`).join('')}</tr>`).join('')}</table>`;$('#stdTableWrap').innerHTML=html}
+function renderGradebook(){const rows=[[ 'Date','Type','Week','Score','Percent' ]];Vault.data.grades.forEach(g=>rows.push([ new Date(g.ts).toLocaleDateString(), g.kind, g.week||'', `${g.ok}/${g.total}`, g.pct+"%" ]));const html=`<table style="width:100%;border-collapse:collapse">${rows.map((r,i)=>`<tr>${r.map(c=>`<td style=\"border:1px solid #eee;padding:6px;${i?'' :'font-weight:700;background:#f8fafc'}\">${c}</td>`).join('')}</tr>`).join('')}</table>`;$('#gradeTableWrap').innerHTML=html;return rows}
+
+// ---------------------- UI Wiring ----------------------
+function renderWeeks(){const bar=$('#weekbar');bar.innerHTML='';CURRICULUM.forEach(w=>{const ch=el('div',{className:'chip',textContent:`W${w.week}`});if(w.week===App.week)ch.classList.add('active');ch.onclick=()=>{App.week=w.week;renderWeeks();$('#planDetail').textContent=`Week ${w.week}: ${w.topic} — Standards: ${w.std.join(', ')}`;renderLesson(w.lessons[0].target)};bar.append(ch)});$('#planDetail').textContent=`Week ${App.week}: ${CURRICULUM[App.week-1].topic} — Standards: ${CURRICULUM[App.week-1].std.join(', ')}`}
+
+const App={week:1,day:1};
+
+$('#btnStart').onclick=()=>{const w=CURRICULUM[App.week-1];$('#lessonTitle').textContent=`${w.lessons[0].title} — ${w.topic}`;renderLesson(w.lessons[0].target)}
+$('#btnLibrary').onclick=()=>{const w=CURRICULUM[App.week-1];alert(`Week ${w.week}: ${w.topic}\nStandards: ${w.std.join(', ')}\n\nLessons:\n`+w.lessons.map(x=>`• ${x.title}`).join('\n'))}
+
+$('#btnQuiz').onclick=()=>{const quiz=buildQuiz(10);openModal('#modalQuiz');$('#quizTitle').textContent=`Weekly Quiz — Week ${App.week}`;renderQuiz(quiz,$('#quizArea'));$('#btnSubmitQuiz').onclick=()=>{const res=gradeQuiz(quiz);$('#quizMsg').textContent=`You got ${res.ok}/${res.total} (${res.pct}%).`;Vault.logGrade({kind:'Weekly Quiz',week:App.week,...res});if(res.pct>=80)Vault.awardStars(5);else if(res.pct>=50)Vault.awardStars(2)}}
+$('#btnExitQuiz').onclick=()=>closeModals()
+
+$('#btnTests').onclick=()=>{const menu=`Choose a test:\n1) Quarter Test (Wks 1–9)\n2) Quarter Test (10–18)\n3) Quarter Test (19–27)\n4) Quarter Test (28–36)\n5) Final Exam (Wk 42)`;const pick=prompt(menu,'1');if(!pick)return;const count=pick==='5'?30:20;openModal('#modalQuiz');$('#quizTitle').textContent=pick==='5'?'Final Exam':'Quarterly Test';const quiz=buildQuiz(count);renderQuiz(quiz,$('#quizArea'));$('#btnSubmitQuiz').onclick=()=>{const res=gradeQuiz(quiz);$('#quizMsg').textContent=`You got ${res.ok}/${res.total} (${res.pct}%).`;Vault.logGrade({kind:$('#quizTitle').textContent,week:App.week,...res});if(res.pct>=80){Vault.awardStars(15);party()}else if(res.pct>=60)Vault.awardStars(8)}}
+
+$('#btnCenters').onclick=()=>openModal('#modalCenters');
+$('#modalCenters').addEventListener('click',e=>{if(e.target.matches('button[data-center]')){closeModals();renderLesson({kind:e.target.dataset.center,text:e.target.textContent})}})
+
+$('#btnRewards').onclick=()=>{const s=Vault.data.stars||0;const msg=s>=100?'Rainbow Crown! 👑':s>=50?'Golden Badge! 🥇':'Keep collecting ⭐ to unlock prizes!';alert(`${msg}\n\nStars: ${s}`)}
+$('#btnCloud').onclick=()=>openModal('#modalCloud')
+$('#btnTeacher').onclick=()=>openModal('#modalTeacher')
+
+// Teacher auth
+async function sha256(text){const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return[...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+$('#btnTeacherLogin').onclick=async()=>{const pass=$('#teacherPass').value;const hash=await sha256(pass);if(!Vault.data.admin.hash){$('#authMsg').textContent='No password set. Click Set/Reset.';return}if(hash===Vault.data.admin.hash){$('#authMsg').textContent='Unlocked ✓';$('#teacherPanel').classList.remove('hidden');renderStandardsTable()}else{$('#authMsg').textContent='Wrong password'}}
+$('#btnTeacherSet').onclick=async()=>{const p1=prompt('Set a new Teacher password:');if(!p1)return;const hash=await sha256(p1);Vault.data.admin.hash=hash;Vault.save();alert('Password set.')}
+$('#btnViewGrades').onclick=()=>renderGradebook()
+$('#btnExportGrades').onclick=()=>{const rows=renderGradebook();const csv=asCSV(rows);downloadText('k-gradebook.csv',csv,'text/csv')}
+$('#btnResetStudent').onclick=()=>{if(confirm('Reset all progress?')){Vault.data.stars=0;Vault.data.grades=[];Vault.save();updateStars();alert('Reset complete.')}}
+
+// Cloud controls
+$('#btnExport').onclick=()=>downloadText('k-math-vault.json',Vault.snapshot(),'application/json')
+$('#btnImport').onclick=()=>pickFileText().then(txt=>{if(!txt)return;const ok=Vault.import(txt);alert(ok?'Import successful.':'Import failed.')})
+$('#btnBackupOPFS').onclick=async()=>{const ok=await OPFS.writeText('k-math-vault.json',Vault.snapshot());alert(ok?'Saved to OPFS.':'OPFS not available in this browser.')}
+$('#btnListOPFS').onclick=async()=>{$('#opfsList').textContent=(await OPFS.list()).join('\n')||'No OPFS support or empty.'}
+
+// P2P
+let peer;$('#btnOffer').onclick=async()=>{peer=PeerLink();await peer.makeOffer()};$('#btnAnswer').onclick=async()=>{peer=peer||PeerLink();await peer.makeAnswer()};$('#btnFinalize').onclick=async()=>{if(peer)await peer.finalize()};$('#btnSendVault').onclick=()=>{if(peer)peer.sendVault()}
+
+// Helpers
+function openModal(id){$(id).classList.add('show')}function closeModals(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'))}
+function downloadText(filename,text,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:mime||'text/plain'}));a.download=filename;a.click();URL.revokeObjectURL(a.href)}
+function pickFileText(){return new Promise(res=>{const inp=document.createElement('input');inp.type='file';inp.accept='.json,.txt';inp.onchange=async()=>{const f=inp.files[0];const txt=await f.text();res(txt)};inp.click()})}
+
+// Init
+(async function init(){Vault.load();await OPFS.init();renderWeeks();$('#lessonTitle').textContent=`Week ${App.week} • Day ${App.day}`;renderLesson(CURRICULUM[0].lessons[0].target);document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));})();
+</script>
+</body>
+</html>
