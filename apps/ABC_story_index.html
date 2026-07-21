@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ABC Story Sing-Along — Big & Bright</title>
+<style>
+  :root{
+    --card-radius:28px;
+    --accent1:#ffb347;
+    --accent2:#ffd36b;
+    --accent3:#80deea;
+    --accent4:#ff8a80;
+    --text:#1b1b1b;
+  }
+  html,body{height:100%;margin:0;font-family:"Comic Sans MS", "Fredoka", "Poppins", system-ui, sans-serif;}
+  body{
+    display:flex;align-items:center;justify-content:center;
+    background: linear-gradient(135deg,#ffeb99 0%, #ffd6a5 40%, #80deea 100%);
+    -webkit-font-smoothing:antialiased;
+    padding:28px;
+  }
+
+  /* App container */
+  .app {
+    width:100%;
+    max-width:980px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.9));
+    border-radius:36px;
+    box-shadow: 0 18px 45px rgba(10,20,40,0.18);
+    padding:28px 30px;
+    box-sizing:border-box;
+    text-align:center;
+  }
+
+  h1{
+    margin:0 0 18px 0;
+    font-size:44px;
+    color:#3f51b5;
+    letter-spacing:1px;
+  }
+  p.lead{margin:6px 0 20px 0;font-size:20px;color:#333;}
+
+  /* Start button */
+  .start-row{display:flex;justify-content:center;margin-bottom:18px;}
+  .start-btn{
+    background: linear-gradient(90deg,#33cc33,#00b07a);
+    color:white;border:none;border-radius:20px;padding:20px 34px;font-size:30px;cursor:pointer;
+    box-shadow: 0 10px 18px rgba(0,0,0,0.15);
+  }
+
+  /* Stacked list area (like first version) */
+  .list-area{
+    display:grid;grid-template-columns:1fr;gap:12px;max-height:360px;overflow:auto;padding:8px;
+  }
+  .letter-btn{
+    display:flex;align-items:center;gap:18px;padding:18px 22px;background:linear-gradient(90deg,#ffefc6,#fff1e0);
+    border-radius:20px;border:4px solid #ffcc66;font-size:30px;cursor:pointer;color:var(--text);
+    transition:transform .14s ease, box-shadow .14s; justify-content:flex-start;
+  }
+  .letter-btn:hover{transform:translateY(-4px);box-shadow:0 8px 18px rgba(0,0,0,0.12);}
+  .letter-char{width:72px;height:72px;border-radius:14px;background:#fff;border:3px solid #ffd36b;display:flex;
+    align-items:center;justify-content:center;font-size:36px;font-weight:700;}
+  .letter-title{font-size:28px;text-align:left;}
+  .letter-sub{font-size:16px;color:#555;margin-top:4px;}
+
+  /* Modal overlay & panel (centered, avoids cutoff) */
+  .overlay{
+    position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.25);
+    z-index:40;padding:28px;
+  }
+  .panel{
+    width:100%;max-width:820px;background:linear-gradient(180deg,#fff8e6,#fffdfb);
+    border-radius:var(--card-radius);padding:28px 30px;box-shadow:0 20px 50px rgba(10,10,30,0.28);
+    transform:translateY(24px) scale(.98);opacity:0;transition:all 420ms cubic-bezier(.2,.9,.3,1);
+    display:flex;flex-direction:column;align-items:center;gap:18px;
+  }
+  .overlay.show .panel{transform:translateY(0) scale(1);opacity:1;}
+
+  .story-top{display:flex;gap:18px;align-items:center;width:100%;justify-content:space-between}
+  .story-left{display:flex;align-items:center;gap:16px;}
+  .emoji{
+    width:160px;height:160px;border-radius:16px;background:#fff;border:6px solid #ffd36b;display:flex;
+    align-items:center;justify-content:center;font-size:72px;box-shadow:0 10px 20px rgba(0,0,0,0.06);
+  }
+  .story-meta{display:flex;flex-direction:column;align-items:flex-start;gap:6px;}
+  .story-title{font-size:40px;color:#e91e63;margin:0;}
+  .story-words{font-size:22px;color:#333;margin:0;}
+
+  .story-text{
+    width:100%;background:rgba(255,255,255,0.85);border-radius:18px;padding:20px;font-size:34px;color:#222;line-height:1.3;
+    border:4px dashed #ffefc6;text-align:center;box-sizing:border-box;
+  }
+
+  /* big controls */
+  .controls{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
+  .control-btn{
+    padding:16px 28px;border-radius:18px;border:none;font-size:26px;cursor:pointer;color:white;
+    box-shadow:0 6px 14px rgba(0,0,0,0.12);
+  }
+  .listen{background:linear-gradient(90deg,#2196f3,#4fc3f7);}
+  .say{background:linear-gradient(90deg,#8e24aa,#e040fb);}
+  .prev{background:linear-gradient(90deg,#ff7043,#ffb300);}
+  .next{background:linear-gradient(90deg,#00c853,#76ff03);}
+
+  /* writing area */
+  textarea.write{
+    width:96%;min-height:120px;border-radius:14px;padding:16px;font-size:28px;border:4px solid #ffd36b;
+    resize:none;box-sizing:border-box;margin-top:6px;
+  }
+
+  /* finish banner */
+  .finish-banner{display:none;align-items:center;gap:14px;background:linear-gradient(90deg,#ffe082,#ffd54f);
+    padding:18px;border-radius:16px;margin-top:8px;box-shadow:0 8px 18px rgba(0,0,0,0.12);}
+  .finish-banner.show{display:flex;}
+
+  /* confetti canvas */
+  #confettiCanvas{position:fixed;left:0;top:0;pointer-events:none;z-index:80;display:none;}
+
+  /* responsive */
+  @media (max-width:900px){
+    .emoji{width:120px;height:120px;font-size:52px}
+    .story-title{font-size:32px}
+    .story-text{font-size:26px}
+    .letter-char{width:64px;height:64px;font-size:32px}
+    .letter-btn{font-size:24px;padding:14px}
+    .start-btn{font-size:28px;padding:16px 26px}
+  }
+</style>
+</head>
+<body>
+
+<div class="app" role="application" aria-label="ABC Story Sing-Along App">
+  <h1>📚 ABC Story Sing-Along</h1>
+  <p class="lead">Tap a letter to open a big story. Listen, say it, and try writing along!</p>
+
+  <div class="start-row">
+    <button class="start-btn" id="openStart">🌟 Start Reading! 🌟</button>
+  </div>
+
+  <div style="max-width:840px;margin:0 auto;">
+    <div class="list-area" id="lettersList" aria-hidden="true">
+      <!-- Letter buttons built by JS -->
+    </div>
+  </div>
+
+  <p style="font-size:14px;color:#333;margin-top:14px;">Tip: Use "Listen" to hear the story. Finish the third line to get a fun reward! 🎉</p>
+</div>
+
+<!-- Modal overlay -->
+<div class="overlay" id="overlay" aria-hidden="true">
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="storyTitle">
+    <div class="story-top">
+      <div class="story-left">
+        <div class="emoji" id="storyEmoji">🍎</div>
+        <div class="story-meta">
+          <h2 class="story-title" id="storyTitle">A is for Apple</h2>
+          <div class="story-words" id="storyWord">Apple — A</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+        <button class="control-btn prev" id="prevBtn">⬅️ Prev</button>
+        <button class="control-btn next" id="closeBtn" style="background:linear-gradient(90deg,#ff5252,#ff8a80)">✖ Close</button>
+      </div>
+    </div>
+
+    <div class="story-text" id="storyText">A short, fun three-line story will appear here.</div>
+
+    <div class="controls" aria-hidden="false">
+      <button class="control-btn listen" id="listenBtn">🔊 Listen</button>
+      <button class="control-btn say" id="sayBtn">🗣️ Say It!</button>
+      <button class="control-btn prev" id="prevLine">◀️ Prev</button>
+      <button class="control-btn next" id="nextLine">Next ▶️</button>
+    </div>
+
+    <textarea class="write" id="writeBox" placeholder="Type the line you hear..."></textarea>
+
+    <div class="finish-banner" id="finishBanner" role="status"><strong id="finishText">Yay! You finished the story!</strong></div>
+  </div>
+</div>
+
+<!-- Confetti canvas -->
+<canvas id="confettiCanvas"></canvas>
+
+<script>
+/* ========== Data: alphabetical stories ========== */
+const stories = [
+  {letter:"A", word:"Apple", emoji:"🍎", lines:[
+    "A is for Apple. A apple falls from the tree.",
+    "We pick apples with Mom. The apple is red and sweet.",
+    "We eat apple slices. Yum! Apples make us strong."
+  ]},
+  {letter:"B", word:"Ball", emoji:"⚽", lines:[
+    "B is for Ball. The ball bounces high.",
+    "We kick the ball with friends. It flies through the air.",
+    "We laugh and run after it. A fun day with the ball!"
+  ]},
+  {letter:"C", word:"Cat", emoji:"🐱", lines:[
+    "C is for Cat. The cat purrs on my lap.",
+    "She chases a string and loves to nap.",
+    "She curls up soft and warm. The cat is my friend."
+  ]},
+  {letter:"D", word:"Dog", emoji:"🐶", lines:[
+    "D is for Dog. The dog wags his tail.",
+    "He fetches a bright ball and runs fast.",
+    "We clap and he barks happily. The dog is kind."
+  ]},
+  {letter:"E", word:"Egg", emoji:"🥚", lines:[
+    "E is for Egg. The egg is smooth and white.",
+    "We make a little breakfast with Mom.",
+    "We eat eggs and feel strong. Hooray for eggs!"
+  ]},
+  {letter:"F", word:"Frog", emoji:"🐸", lines:[
+    "F is for Frog. The frog jumps in the pond.",
+    "He goes ribbit and swims with a splash.",
+    "We watch him hop on a lily pad. Frogs like to play."
+  ]},
+  {letter:"G", word:"Goat", emoji:"🐐", lines:[
+    "G is for Goat. The goat nibbles on hay.",
+    "He bleats and climbs a little hill.",
+    "He kicks a tiny stone and smiles. Goats are funny."
+  ]},
+  {letter:"H", word:"Hat", emoji:"🎩", lines:[
+    "H is for Hat. The hat is big and blue.",
+    "We wear the hat to stay warm when cold.",
+    "The hat flies off in the wind. We chase and laugh."
+  ]},
+  {letter:"I", word:"Ink", emoji:"🖋️", lines:[
+    "I is for Ink. Ink writes bright letters on paper.",
+    "We draw a small sun and a big tree.",
+    "Our picture tells a story. Writing is fun."
+  ]},
+  {letter:"J", word:"Jump", emoji:"🤸‍♀️", lines:[
+    "J is for Jump. We jump high on the mat.",
+    "We reach for the clouds and count one, two, three.",
+    "We land with a giggle. Jumping is joyful!"
+  ]},
+  {letter:"K", word:"Kite", emoji:"🪁", lines:[
+    "K is for Kite. The kite flies in the blue sky.",
+    "Dad holds the string and we run fast.",
+    "The kite dances with the wind. It waves hello."
+  ]},
+  {letter:"L", word:"Lion", emoji:"🦁", lines:[
+    "L is for Lion. The lion says a tiny roar.",
+    "He pretends to be brave in the grass.",
+    "We clap for the lion's show. He bows and smiles."
+  ]},
+  {letter:"M", word:"Moon", emoji:"🌙", lines:[
+    "M is for Moon. The moon glows at night.",
+    "We count stars around the moon's light.",
+    "We whisper goodnight and dream of the moon."
+  ]},
+  {letter:"N", word:"Nest", emoji:"🪺", lines:[
+    "N is for Nest. Little birds sleep in a nest.",
+    "Mama bird brings seeds for her chicks.",
+    "They chirp in the morning. The nest keeps them safe."
+  ]},
+  {letter:"O", word:"Octopus", emoji:"🐙", lines:[
+    "O is for Octopus. Eight arms swirl in the sea.",
+    "It waves hello to fish and coral.",
+    "It hides in a rock and plays peek-a-boo."
+  ]},
+  {letter:"P", word:"Pig", emoji:"🐷", lines:[
+    "P is for Pig. The pig rolls in the mud.",
+    "He snorts and wiggles his little tail.",
+    "After bath time he smells sweet. Pigs love to play."
+  ]},
+  {letter:"Q", word:"Queen", emoji:"👑", lines:[
+    "Q is for Queen. The queen wears a shiny crown.",
+    "She waves gently to the smiling crowd.",
+    "She shares a kind story with everyone."
+  ]},
+  {letter:"R", word:"Rainbow", emoji:"🌈", lines:[
+    "R is for Rainbow. Colors paint the sky after rain.",
+    "We point to red, blue, and green arches.",
+    "We search for treasure at the end of the rainbow."
+  ]},
+  {letter:"S", word:"Sun", emoji:"☀️", lines:[
+    "S is for Sun. The sun warms our faces.",
+    "We play outside from morning to noon.",
+    "When the sun sets we say goodnight and smile."
+  ]},
+  {letter:"T", word:"Tree", emoji:"🌳", lines:[
+    "T is for Tree. The tree grows tall and strong.",
+    "We climb branches and pick a ripe pear.",
+    "Leaves dance down in autumn like confetti."
+  ]},
+  {letter:"U", word:"Umbrella", emoji:"☂️", lines:[
+    "U is for Umbrella. It keeps us dry in the rain.",
+    "We tap it and make a tiny drum sound.",
+    "We splash in puddles and wear rain boots."
+  ]},
+  {letter:"V", word:"Violin", emoji:"🎻", lines:[
+    "V is for Violin. The bow sings a soft tune.",
+    "We listen to music and sway slow.",
+    "We clap softly when the song ends."
+  ]},
+  {letter:"W", word:"Whale", emoji:"🐋", lines:[
+    "W is for Whale. The whale sings deep songs.",
+    "It spouts water high into the air.",
+    "We watch it swim far across the sea."
+  ]},
+  {letter:"X", word:"X-ray", emoji:"🩻", lines:[
+    "X is for X-ray. It peeks inside to help us heal.",
+    "Doctors look and keep us healthy and strong.",
+    "We say thank you for caring hands."
+  ]},
+  {letter:"Y", word:"Yoyo", emoji:"🪀", lines:[
+    "Y is for Yoyo. The yoyo goes up and down.",
+    "We spin it and try a tiny trick.",
+    "It zips back to our hand. Hooray for yoyos!"
+  ]},
+  {letter:"Z", word:"Zebra", emoji:"🦓", lines:[
+    "Z is for Zebra. Black and white stripes shine.",
+    "It trots across the sunny plains.",
+    "We wave goodbye as the zebra trots away."
+  ]}
+];
+
+/* ========== Build the letter list (stacked buttons) ========== */
+const lettersList = document.getElementById('lettersList');
+stories.forEach((s, idx) => {
+  const btn = document.createElement('button');
+  btn.className = 'letter-btn';
+  btn.setAttribute('data-index', idx);
+  btn.innerHTML = `<div class="letter-char">${s.letter}</div>
+                   <div style="flex:1;text-align:left;">
+                     <div class="letter-title">${s.word}</div>
+                     <div class="letter-sub">${s.letter} • ${s.word}</div>
+                   </div>`;
+  btn.onclick = () => openStory(idx);
+  lettersList.appendChild(btn);
+});
+
+/* ========== Modal & controls ========== */
+const overlay = document.getElementById('overlay');
+const panel = document.querySelector('.panel');
+const storyTitle = document.getElementById('storyTitle');
+const storyWord = document.getElementById('storyWord');
+const storyEmoji = document.getElementById('storyEmoji');
+const storyText = document.getElementById('storyText');
+const writeBox = document.getElementById('writeBox');
+const listenBtn = document.getElementById('listenBtn');
+const sayBtn = document.getElementById('sayBtn');
+const nextLineBtn = document.getElementById('nextLine');
+const prevLineBtn = document.getElementById('prevLine');
+const prevBtn = document.getElementById('prevBtn');
+const closeBtn = document.getElementById('closeBtn');
+const finishBanner = document.getElementById('finishBanner');
+const finishText = document.getElementById('finishText');
+
+let currentIndex = 0;
+let lineIndex = 0;
+let selectedVoice = null;
+
+/* Center overlay and show / hide helpers */
+function openOverlay(){
+  overlay.style.display = 'flex';
+  overlay.classList.add('show');
+  overlay.setAttribute('aria-hidden','false');
+  document.getElementById('lettersList').setAttribute('aria-hidden','true');
+  // small focus hint
+  panel.querySelector('.listen').focus();
+}
+function closeOverlay(){
+  overlay.classList.remove('show');
+  setTimeout(()=>overlay.style.display='none',420);
+  overlay.setAttribute('aria-hidden','true');
+  document.getElementById('lettersList').setAttribute('aria-hidden','false');
+  speechSynthesis.cancel();
+  hideFinish();
+}
+
+/* Open story */
+function openStory(i){
+  currentIndex = i;
+  lineIndex = 0;
+  renderStory();
+  openOverlay();
+}
+
+/* Render story */
+function renderStory(){
+  const s = stories[currentIndex];
+  storyTitle.textContent = `${s.letter} is for ${s.word}`;
+  storyWord.textContent = `${s.word} — ${s.letter}`;
+  storyEmoji.textContent = s.emoji || '🔤';
+  storyText.textContent = s.lines[lineIndex];
+  writeBox.value = '';
+  hideFinish();
+}
+
+/* Next/Prev story navigation */
+function nextStory(){
+  currentIndex = (currentIndex + 1) % stories.length;
+  lineIndex = 0;
+  renderStory();
+}
+function prevStory(){
+  currentIndex = (currentIndex - 1 + stories.length) % stories.length;
+  lineIndex = 0;
+  renderStory();
+}
+
+/* Next/Prev line */
+function nextLine(){
+  const s = stories[currentIndex];
+  if(lineIndex < s.lines.length - 1){
+    lineIndex++;
+    storyText.textContent = s.lines[lineIndex];
+    writeBox.value = '';
+  } else {
+    // finished story
+    showFinish();
+  }
+}
+function prevLine(){
+  if(lineIndex > 0){
+    lineIndex--;
+    storyText.textContent = stories[currentIndex].lines[lineIndex];
+    writeBox.value = '';
+    hideFinish();
+  }
+}
+
+/* Listen (speech) - choose best available voice */
+function setupVoice(){
+  const voices = speechSynthesis.getVoices();
+  // prefer Google/Neural-ish / English voices
+  selectedVoice = voices.find(v => /Google.*English|en-US.*Neural|Microsoft|Samantha|Alloy|Daniel|Jenny/i.test(v.name)) || voices.find(v=>v.lang && v.lang.startsWith('en')) || voices[0];
+}
+speechSynthesis.onvoiceschanged = setupVoice;
+
+/* Speak a text with friendly settings */
+function speakText(text, onend){
+  if(!text) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.rate = 0.92;    // slightly slow and clear
+  u.pitch = 1.05;   // gentle friendly tone
+  u.volume = 1;
+  if(selectedVoice) u.voice = selectedVoice;
+  u.onend = () => { if(typeof onend === 'function') onend(); };
+  // ensure user gesture may be required; this is used in response to clicks
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+
+/* Listen the current line */
+listenBtn.addEventListener('click', ()=> {
+  const text = storyText.textContent;
+  speakText(text);
+});
+
+/* Say it prompt */
+sayBtn.addEventListener('click', ()=> {
+  alert('Now you say it out loud! 🗣️ Try to speak the line like a storyteller.');
+});
+
+/* navigation events */
+nextLineBtn.addEventListener('click', nextLine);
+prevLineBtn.addEventListener('click', prevLine);
+prevBtn.addEventListener('click', prevStory);
+closeBtn.addEventListener('click', closeOverlay);
+
+/* Start button scroll to letter list then focus */
+document.getElementById('openStart').addEventListener('click', ()=>{
+  // reveal and focus the letter list (it may be hidden on initial load)
+  document.getElementById('lettersList').scrollIntoView({behavior:'smooth',block:'center'});
+  // small visual nudge
+  const firstBtn = document.querySelector('.letter-btn');
+  if(firstBtn) firstBtn.classList.add('glow');
+  setTimeout(()=>firstBtn && firstBtn.classList.remove('glow'),600);
+});
+
+/* wrote - nothing fancy; we could check correctness */
+writeBox.addEventListener('input', ()=> {
+  // optional: if typed matches current line (rough), celebrate
+});
+
+/* ========== Finish reward: confetti + stars + voice ========== */
+/* confetti adapted simple canvas particles */
+const canvas = document.getElementById('confettiCanvas');
+const ctx = canvas.getContext('2d');
+let confettiPieces = [];
+function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize',resizeCanvas);
+resizeCanvas();
+
+function random(min,max){ return Math.random()*(max-min)+min; }
+
+function spawnConfetti(){
+  confettiPieces = [];
+  const count = 90;
+  for(let i=0;i<count;i++){
+    confettiPieces.push({
+      x: random(0, canvas.width),
+      y: random(-canvas.height, 0),
+      r: random(6,14),
+      color: ['#FFD700','#FF6F61','#FFB347','#76FF03','#00B0FF','#E040FB'][Math.floor(random(0,6))],
+      tilt: random(-10,10),
+      speedY: random(2,6),
+      speedX: random(-1,1),
+      spin: random(-0.1,0.1)
+    });
+  }
+  canvas.style.display = 'block';
+  requestAnimationFrame(updateConfetti);
+}
+let confettiTick = 0;
+function updateConfetti(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  confettiTick++;
+  confettiPieces.forEach(p=>{
+    p.x += p.speedX;
+    p.y += p.speedY;
+    p.tilt += p.spin;
+    ctx.save();
+    ctx.translate(p.x,p.y);
+    ctx.rotate(p.tilt * Math.PI/180);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r*0.6);
+    ctx.restore();
+  });
+  // fade out after some time
+  if(confettiTick < 220){
+    requestAnimationFrame(updateConfetti);
+  } else {
+    confettiPieces = [];
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    canvas.style.display = 'none';
+    confettiTick = 0;
+  }
+}
+
+function showFinish(){
+  finishBanner.classList.add('show');
+  finishBanner.style.display = 'flex';
+  // confetti
+  spawnConfetti();
+  // play a celebratory voice line
+  speakText('Yay! You finished the story! Great job!', ()=>{
+    // small applause courtesy beep (use Web Audio)
+    playApplause();
+  });
+}
+
+function hideFinish(){
+  finishBanner.classList.remove('show');
+  finishBanner.style.display = 'none';
+}
+
+/* small applause sound via WebAudio synth */
+function playApplause(){
+  try{
+    const ctxA = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctxA.createOscillator();
+    const g = ctxA.createGain();
+    o.type = 'triangle';
+    o.frequency.value = 820;
+    g.gain.value = 0.0001;
+    o.connect(g); g.connect(ctxA.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.12, ctxA.currentTime+0.03);
+    g.gain.exponentialRampToValueAtTime(0.00001, ctxA.currentTime+0.6);
+    o.stop(ctxA.currentTime+0.7);
+  }catch(e){/* ignore in restricted environments */}
+}
+
+/* keyboard shortcuts for accessibility */
+document.addEventListener('keydown', (e)=>{
+  if(overlay.style.display==='flex'){
+    if(e.key==='ArrowRight') nextLine();
+    if(e.key==='ArrowLeft') prevLine();
+    if(e.key==='Escape') closeOverlay();
+  }
+});
+
+/* Initialize voices and UI on load */
+window.addEventListener('load', ()=>{
+  // attempt to pre-populate voices
+  setupVoice();
+  // small accessibility: ensure list focusable
+  const list = document.getElementById('lettersList');
+  list.querySelectorAll('.letter-btn').forEach(btn=>btn.setAttribute('tabindex','0'));
+});
+</script>
+</body>
+</html>
