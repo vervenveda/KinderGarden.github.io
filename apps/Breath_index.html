@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Khaemenes Academy — Kinder Garden (Sovereign)</title>
+<style>
+  :root{ --accent:#7c3aed; --muted:#9aa6b2; --card-radius:14px; }
+  :root.light { --bg-1: linear-gradient(135deg,#f4f8ff,#fef9f0); --text:#0b1220; --card-bg: rgba(255,255,255,0.96); --glass: rgba(255,255,255,0.95); --panel-shadow: 0 10px 30px rgba(2,6,23,0.06); --orb-inner: linear-gradient(180deg,#fff,#f3f6ff); }
+  :root.dark  { --bg-1: radial-gradient(circle at 20% 30%, #071428 0%, #0b2540 60%, #020924 100%); --text:#e6f6ff; --card-bg: rgba(8,12,20,0.5); --glass: rgba(255,255,255,0.02); --panel-shadow: 0 20px 40px rgba(0,0,0,0.65); --orb-inner: radial-gradient(circle at 30% 30%, rgba(110,231,217,0.12), rgba(108,92,231,0.06)); }
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:var(--text);background:var(--bg-1);}
+  /* canvas */
+  #stars{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+  .app{ position:relative; z-index:2; min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:20px; box-sizing:border-box; }
+  .panel{ width:1150px; max-width:96vw; border-radius:var(--card-radius); padding:18px; box-sizing:border-box; display:grid; grid-template-columns:320px 1fr 360px; gap:14px; background:var(--card-bg); box-shadow:var(--panel-shadow); border:1px solid rgba(255,255,255,0.03); }
+  header.panel-head{ grid-column:1/-1; display:flex; align-items:center; gap:12px; }
+  .title{ font-size:20px; font-weight:700; margin:0; }
+  .subtitle{ margin:0; color:var(--muted); font-size:13px; }
+  .left{ display:flex; flex-direction:column; gap:12px; align-items:center; }
+  .orb{ width:220px; height:220px; border-radius:50%; background:var(--orb-inner); display:flex; align-items:center; justify-content:center; flex-direction:column; box-shadow:0 12px 30px rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.03); }
+  .orb .big{ font-weight:700; font-size:16px; }
+  .controls{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .center{ display:flex; flex-direction:column; gap:10px; }
+  textarea#input{ width:100%; min-height:90px; padding:10px; border-radius:10px; border:1px solid rgba(0,0,0,0.06); font-size:14px; box-sizing:border-box; background:var(--glass); color:var(--text); }
+  .btn{ padding:10px 12px; border-radius:10px; border:none; cursor:pointer; font-weight:700; }
+  .btn.primary{ background:linear-gradient(90deg,#2dd4bf,#60a5fa); color:#022b3a; }
+  .btn.ghost{ background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--text); }
+  .btn.small{ padding:6px 8px; font-size:13px; border-radius:8px; }
+  .card{ background:var(--card-bg); border-radius:12px; padding:12px; box-sizing:border-box; border:1px solid rgba(0,0,0,0.04); }
+  label.small{ display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+  .menu-btn{ position:fixed; left:18px; top:18px; z-index:20; width:56px; height:56px; border-radius:50%; background:var(--accent); color:#fff; border:none; box-shadow:0 8px 20px rgba(0,0,0,0.18); cursor:pointer; font-size:20px; }
+  .menu-panel{ position:fixed; left:18px; top:86px; z-index:20; background:var(--card-bg); border-radius:12px; padding:10px; box-shadow:var(--panel-shadow); border:1px solid rgba(255,255,255,0.02); display:none; }
+  .menu-item{ display:flex; gap:10px; align-items:center; padding:8px; border-radius:8px; cursor:pointer; width:220px; background:transparent; border:none; color:var(--text); text-align:left; }
+  .menu-item:hover{ background: rgba(255,255,255,0.03); }
+  .games-row{ display:flex; gap:12px; overflow:auto; padding-bottom:8px; }
+  .game-card{ min-width:180px; padding:12px; border-radius:12px; background:linear-gradient(180deg,#fff,#fffbeb); box-shadow:0 8px 20px rgba(0,0,0,0.06); color:#111; }
+  .qa-list{ max-height:220px; overflow:auto; border-radius:8px; padding:8px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.02); }
+  .qa-item{ padding:8px; border-bottom:1px dashed rgba(255,255,255,0.03); }
+  canvas#faceCanvas{ border-radius:12px; background:linear-gradient(180deg,#fff,#fbfbff); border:1px solid rgba(0,0,0,0.06); cursor:crosshair; }
+  .face-controls{ display:flex; flex-direction:column; gap:8px; min-width:220px; }
+  footer.note{ grid-column:1/-1; text-align:center; color:var(--muted); font-size:13px; }
+  @media (max-width:980px){ .panel{ grid-template-columns:1fr; padding:12px; } .left{ order:2 } .center{ order:1 } .right{ order:3 } .orb{ width:160px; height:160px } }
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<button id="menuToggle" class="menu-btn" title="Menu">☰</button>
+<div id="menuPanel" class="menu-panel"></div>
+
+<div class="app">
+  <div class="panel" id="mainPanel" role="application" aria-label="Khaemenes Kinder Garden">
+    <header class="panel-head">
+      <div>
+        <div class="title">Khaemenes Academy — Kinder Garden</div>
+        <div class="subtitle">A Kinder Garden for your kindergartener to grow</div>
+      </div>
+      <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+        <button id="themeToggle" class="btn ghost">Dark Space</button>
+        <button id="exportAllBtn" class="btn ghost">Export All</button>
+        <button id="importAllBtn" class="btn ghost">Import</button>
+      </div>
+    </header>
+
+    <aside class="left">
+      <div class="orb" id="orb">
+        <div class="big" id="orbTier">ready</div>
+        <div class="meta" id="orbMeta">mood</div>
+      </div>
+
+      <div class="card">
+        <label class="small">Quick Navigation</label>
+        <div class="controls">
+          <button id="homeBtn" class="btn small">Home</button>
+          <button id="subjectsBtn" class="btn small">Subjects</button>
+          <button id="gamesBtn" class="btn small">Games</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <label class="small">Teacher Admin</label>
+        <div class="controls">
+          <button id="adminLogin" class="btn ghost small">Teacher Login</button>
+          <button id="changePassBtn" class="btn ghost small">Change Passcode</button>
+        </div>
+        <div style="margin-top:8px;font-size:13px;color:var(--muted)">Passcode protected admin editing</div>
+      </div>
+    </aside>
+
+    <main id="pageContainer" class="center" role="main">
+      <!-- dynamic content goes here -->
+    </main>
+
+    <aside class="right">
+      <div class="card">
+        <label class="small">Detected Tier</label>
+        <div id="detectedTier" style="font-weight:700">—</div>
+      </div>
+
+      <div class="card">
+        <label class="small">Voice</label>
+        <select id="voiceSelect"></select>
+        <div style="margin-top:8px" class="controls">
+          <button id="voiceToggle" class="btn small">🔈</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <label class="small">Ask the Teacher</label>
+        <input id="askName" placeholder="Name (optional)" />
+        <textarea id="askQuestion" placeholder="Type your question..." style="min-height:72px;margin-top:6px"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="askSubmit" class="btn small primary">Ask</button>
+          <button id="askClear" class="btn small ghost">Clear</button>
+        </div>
+        <div style="margin-top:8px">
+          <label class="small">Student Questions</label>
+          <div class="qa-list" id="qaList"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <label class="small">Activity Log</label>
+        <div id="activityLog" style="font-size:13px;color:var(--muted);min-height:90px"></div>
+      </div>
+    </aside>
+
+    <footer class="note">Sovereign • Local-first • Export/Import for backups</footer>
+  </div>
+</div>
+
+<!-- Modal root -->
+<div id="modalRoot" style="display:none; position:fixed; inset:0; align-items:center; justify-content:center; z-index:40;">
+  <div style="position:fixed; inset:0; background:rgba(0,0,0,0.4)"></div>
+  <div style="width:760px; max-width:94vw; background:var(--card-bg); border-radius:12px; padding:16px; box-shadow:0 20px 40px rgba(0,0,0,0.6); position:relative; z-index:41;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <strong id="modalTitle">Modal</strong>
+      <button id="modalClose" class="btn ghost small">Close</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* =========================
+   Khaemenes Kinder Garden
+   - Single file sovereign portal
+   ========================= */
+(function(){
+  'use strict';
+
+  /* ---------- Utilities ---------- */
+  function uid(p='id'){ return p + '_' + Math.random().toString(36).slice(2,9); }
+  function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function persist(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){ console.warn(e); } }
+  function retrieve(k, fallback){ try{ const r = localStorage.getItem(k); return r ? JSON.parse(r) : fallback; }catch(e){ return fallback; } }
+
+  /* ---------- Keys & Defaults ---------- */
+  const KEYS = {
+    curriculum: 'kk_curriculum_v1',
+    sentences: 'kk_sentences_v1',
+    qa: 'kk_qa_v1',
+    activity: 'kk_activity_v1',
+    adminPass: 'kk_admin_pass_v1',
+    theme: 'kk_theme_v1',
+    voice: 'kk_voice_v1',
+    faces: 'kk_faces_v1'
+  };
+
+  // default admin passcode
+  if(!localStorage.getItem(KEYS.adminPass)) localStorage.setItem(KEYS.adminPass, '1234');
+
+  // default curriculum (small seeds)
+  const DEFAULT_CURRICULUM = {
+    "Language Arts":[ {week:1,level:'K',topic:'Letters & Sounds',activities:['Letter hunt','Sing ABCs'],vocab:[{word:'Letter',def:'Symbol for a sound'}],quiz:[{q:'First letter?',a:'A'}]} ],
+    "Math":[ {week:1,level:'K',topic:'Counting',activities:['Count blocks','Number song'],vocab:[{word:'Number',def:'Symbol for amount'}],quiz:[{q:'Count to 5',a:'1,2,3,4,5'}]} ],
+    "Science":[ {week:1,level:'K',topic:'Senses',activities:['Touch & feel','Sound game'],vocab:[{word:'Sense',def:'Way to notice world'}],quiz:[{q:'How many senses?',a:'5'}]} ],
+    "Social Studies":[ {week:1,level:'K',topic:'Community Helpers',activities:['Draw a helper','Role play'],vocab:[{word:'Community',def:'People living together'}],quiz:[{q:'Who helps when sick?',a:'Doctor'}]} ],
+    "SEL":[ {week:1,level:'K',topic:'Feelings',activities:['Face match','Emotion songs'],vocab:[{word:'Happy',def:'Feeling good'}],quiz:[{q:'How do you feel when you smile?',a:'Happy'}]} ],
+    "Art":[ {week:1,level:'K',topic:'Colors',activities:['Mix paints','Color hunt'],vocab:[{word:'Color',def:'What we see'}],quiz:[{q:'Name a color',a:'Red'}]} ],
+    "Music":[ {week:1,level:'K',topic:'Rhythm',activities:['Clap patterns','Sing along'],vocab:[{word:'Beat',def:'Steady sound'}],quiz:[{q:'What do you clap?',a:'Beat'}]} ],
+    "PE":[ {week:1,level:'K',topic:'Movement',activities:['Jumping','Balance'],vocab:[{word:'Jump',def:'Leave the ground briefly'}],quiz:[{q:'Show a hop',a:'Hop'}]} ]
+  };
+  let curriculum = retrieve(KEYS.curriculum, DEFAULT_CURRICULUM);
+
+  // sentences for AuroraFace
+  let defaultSentences = retrieve(KEYS.sentences, [
+    "I got a big hug today.",
+    "My ice cream fell on the floor.",
+    "My friend shared a toy with me.",
+    "I saw a rainbow at recess.",
+    "Someone said something kind."
+  ]);
+
+  // QA board
+  let qaBoard = retrieve(KEYS.qa, []);
+
+  // activity log
+  let activityLog = retrieve(KEYS.activity, []);
+
+  /* ---------- DOM refs ---------- */
+  const stars = document.getElementById('stars');
+  const menuToggle = document.getElementById('menuToggle');
+  const menuPanel = document.getElementById('menuPanel');
+  const themeToggle = document.getElementById('themeToggle');
+  const pageContainer = document.getElementById('pageContainer');
+  const modalRoot = document.getElementById('modalRoot');
+  const modalBody = document.getElementById('modalBody');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalClose = document.getElementById('modalClose');
+  const voiceSelect = document.getElementById('voiceSelect');
+  const voiceToggle = document.getElementById('voiceToggle');
+  const orbTier = document.getElementById('orbTier');
+  const orbMeta = document.getElementById('orbMeta');
+  const detectedTier = document.getElementById('detectedTier');
+  const qaList = document.getElementById('qaList');
+  const activityLogEl = document.getElementById('activityLog');
+  const exportAllBtn = document.getElementById('exportAllBtn');
+  const importAllBtn = document.getElementById('importAllBtn');
+
+  /* ---------- Stars background ---------- */
+  (function initStars(){
+    const c = stars; const ctx = c.getContext('2d');
+    function resize(){ c.width = innerWidth; c.height = innerHeight; seed(); }
+    let starsArr=[];
+    function seed(){
+      starsArr = []; const n = Math.round((c.width*c.height)/7000);
+      for(let i=0;i<n;i++) starsArr.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.4+0.3,a:Math.random()*6.28,s:Math.random()*0.02+0.001});
+    }
+    function draw(){
+      ctx.clearRect(0,0,c.width,c.height);
+      for(const s of starsArr){ s.a += s.s*(Math.random()*0.6+0.2); const alpha = 0.3 + 0.7*(0.5+0.5*Math.sin(s.a)); ctx.beginPath(); ctx.fillStyle = `rgba(255,255,255,${alpha})`; ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill(); }
+      requestAnimationFrame(draw);
+    }
+    addEventListener('resize', resize);
+    resize(); draw();
+  })();
+
+  /* ---------- Theme ---------- */
+  const theme = localStorage.getItem(KEYS.theme) || 'dark';
+  document.documentElement.classList.add(theme);
+  stars.style.opacity = theme==='dark' ? '1' : '0';
+  themeToggle.textContent = theme==='dark' ? 'Light View' : 'Dark Space';
+  themeToggle.addEventListener('click', ()=> {
+    const t = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+    document.documentElement.classList.remove('dark','light');
+    document.documentElement.classList.add(t);
+    localStorage.setItem(KEYS.theme, t);
+    stars.style.opacity = t==='dark' ? '1' : '0';
+    themeToggle.textContent = t==='dark' ? 'Light View' : 'Dark Space';
+    logActivity(`Theme switched to ${t}`);
+  });
+
+  /* ---------- Menu & Routing ---------- */
+  const menuItems = [
+    {key:'home',label:'Home',icon:'🏠'},
+    {key:'subjects',label:'Subjects',icon:'📚'},
+    {key:'games',label:'Games',icon:'🎮'},
+    {key:'yearbook',label:'Yearbook',icon:'📸'},
+    {key:'ask',label:'Ask Teacher',icon:'❓'},
+    {key:'admin',label:'Admin',icon:'⚙️'}
+  ];
+  function buildMenu(){
+    menuPanel.innerHTML = '';
+    menuItems.forEach(mi=>{
+      const b = document.createElement('button'); b.className='menu-item'; b.innerHTML = `<span style="font-size:18px;margin-right:8px">${mi.icon}</span><span>${mi.label}</span>`;
+      b.onclick = ()=>{ navigate(mi.key); menuPanel.style.display='none'; };
+      menuPanel.appendChild(b);
+    });
+    const hr = document.createElement('hr'); hr.style.opacity=0.06; menuPanel.appendChild(hr);
+    const subjTitle = document.createElement('div'); subjTitle.style.color=getComputedStyle(document.documentElement).getPropertyValue('--muted'); subjTitle.style.fontSize='12px'; subjTitle.style.margin='6px 2px'; subjTitle.textContent='Core Subjects';
+    menuPanel.appendChild(subjTitle);
+    Object.keys(curriculum).forEach(s=>{
+      const b = document.createElement('button'); b.className='menu-item'; b.innerHTML = `<span style="font-size:18px">📘</span><span>${s}</span>`;
+      b.onclick = ()=> { renderSubjectPortal(s, curriculum[s]); menuPanel.style.display='none'; };
+      menuPanel.appendChild(b);
+    });
+  }
+  buildMenu();
+  menuToggle.addEventListener('click', ()=> menuPanel.style.display = menuPanel.style.display==='none' ? 'block' : 'none' );
+
+  /* ---------- Voice ---------- */
+  const state = { voices: [], voiceEnabled: true };
+  function populateVoices(){ try{ const vs = speechSynthesis.getVoices() || []; state.voices = vs; voiceSelect.innerHTML = '<option value="">Default</option>'; vs.forEach(v=> voiceSelect.appendChild(Object.assign(document.createElement('option'),{value:v.voiceURI,textContent:`${v.name} — ${v.lang}`}))); const saved = localStorage.getItem(KEYS.voice)||''; if(saved) voiceSelect.value = saved; }catch(e){} }
+  populateVoices();
+  if('onvoiceschanged' in speechSynthesis) speechSynthesis.onvoiceschanged = populateVoices;
+  function speakSoft(text, tier='earthly'){ if(!state.voiceEnabled || !('speechSynthesis' in window) || !text) return; try{ const softened = text.replace(/\.\s*/g,'… ').replace(/,\s*/g,'… '); const u = new SpeechSynthesisUtterance(softened); u.lang='en-US'; u.rate = tier==='transcendent'?0.82: tier==='empowered'?0.92:0.88; u.pitch = tier==='transcendent'?0.95: tier==='empowered'?1.0:0.96; u.volume=0.9; if(voiceSelect.value){ const v=state.voices.find(x=>x.voiceURI===voiceSelect.value); if(v) u.voice=v; } else { const prefer = state.voices.find(v=> /Samantha|Serena|Google UK English Female|Karen/i.test(v.name)); if(prefer) u.voice=prefer; } speechSynthesis.cancel(); setTimeout(()=>speechSynthesis.speak(u),80); }catch(e){console.warn(e);} }
+  voiceToggle.addEventListener('click', ()=> { state.voiceEnabled = !state.voiceEnabled; voiceToggle.textContent = state.voiceEnabled ? '🔈' : '🔇'; logActivity(`Voice ${state.voiceEnabled?'on':'off'}`); });
+  voiceSelect.addEventListener('change', ()=> { localStorage.setItem(KEYS.voice, voiceSelect.value || ''); });
+
+  /* ---------- Activity Log ---------- */
+  function logActivity(msg){ activityLog.unshift({id:uid('act'),msg,at:new Date().toISOString()}); activityLog = activityLog.slice(0,120); persist(KEYS.activity, activityLog); renderActivity(); }
+  function renderActivity(){ activityLogEl.innerHTML = activityLog.map(a=>`<div style="margin-bottom:6px">${escapeHtml(a.msg)} <div style="font-size:11px;color:${getComputedStyle(document.documentElement).getPropertyValue('--muted')};">${new Date(a.at).toLocaleString()}</div></div>`).join(''); }
+  activityLog = activityLog || [];
+  renderActivity();
+
+  /* ---------- Navigation & Pages ---------- */
+  function navigate(key){
+    if(key==='home') renderHome();
+    else if(key==='subjects') renderSubjects();
+    else if(key==='games') renderGamesHub();
+    else if(key==='yearbook') renderYearbook();
+    else if(key==='ask') renderAskTeacher();
+    else if(key==='admin') showAdminModal();
+  }
+
+  function renderHome(){
+    pageContainer.innerHTML = `
+      <div class="card">
+        <h2>Welcome to the Khaemenes Academy Kinder Garden</h2>
+        <p class="subtitle">An enchanted learning garden where little ones grow.</p>
+        <div style="height:12px"></div>
+        <div class="row">
+          <button class="btn primary" id="enterGames">Go to Games</button>
+          <button class="btn ghost" id="enterSubjects">Open Subjects</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Getting Started</h3>
+        <ul>
+          <li>Teacher Admin is protected by a 4-digit passcode (default 1234).</li>
+          <li>Use Dark Space theme for an aurora night garden.</li>
+          <li>All data is stored locally. Export to backup.</li>
+        </ul>
+      </div>
+    `;
+    document.getElementById('enterGames').onclick = ()=> renderGamesHub();
+    document.getElementById('enterSubjects').onclick = ()=> renderSubjects();
+    logActivity('Home opened');
+  }
+
+  function renderSubjects(){
+    pageContainer.innerHTML = `<div><h2>Subjects</h2><div class="subtitle">Select a subject area</div><div style="height:12px"></div><div class="card" id="subCard"></div></div>`;
+    const sc = document.getElementById('subCard');
+    sc.innerHTML = Object.keys(curriculum).map(s=>`<button class="btn ghost" style="margin:6px" data-sub="${s}">${escapeHtml(s)}</button>`).join('');
+    sc.querySelectorAll('button[data-sub]').forEach(b=> b.onclick = ()=> renderSubjectPortal(b.getAttribute('data-sub'), curriculum[b.getAttribute('data-sub')] || []));
+    logActivity('Subjects opened');
+  }
+
+  function renderSubjectPortal(subjectName, data){
+    const subject = subjectName;
+    if(!Array.isArray(data)) data=[];
+    let adminMode = false;
+    function draw(){
+      pageContainer.innerHTML = `
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><h2>${escapeHtml(subject)}</h2><div class="subtitle">Editable weekly curriculum</div></div>
+            <div><button id="adminToggle" class="btn ghost">${adminMode?'Exit Admin':'Admin Edit'}</button></div>
+          </div>
+          <div style="height:12px"></div>
+          <div class="card">
+            <div style="margin-bottom:8px">${data.map(w=>`<button class="btn ghost wk" data-week="${w.week}">Week ${w.week}</button>`).join('')}</div>
+            <div id="weekPane"></div>
+          </div>
+        </div>
+      `;
+      document.getElementById('adminToggle').onclick = ()=> { if(!verifyAdmin()) return; adminMode = !adminMode; draw(); };
+      document.querySelectorAll('.wk').forEach(b=> b.onclick = ()=> renderWeekPane(Number(b.getAttribute('data-week'))));
+      if(data.length) renderWeekPane(data[0].week);
+    }
+    function renderWeekPane(week){
+      const wdata = data.find(w=>w.week===week) || {};
+      pageContainer.querySelector('#weekPane').innerHTML = `
+        <div>
+          <div style="font-weight:700;color:var(--muted);margin-bottom:8px">Topic</div>
+          ${ adminMode ? `<input id="editTopic" value="${escapeHtml(wdata.topic||'')}" />` : `<div style="font-weight:700;margin-bottom:10px">${escapeHtml(wdata.topic||'')}</div>` }
+          <div style="margin-top:8px"><div style="font-weight:700;color:var(--muted);margin-bottom:6px">Activities</div>
+            <ul id="actList">${(wdata.activities||[]).map((a,i)=>`<li>${ adminMode ? `<input class="actInput" data-i="${i}" value="${escapeHtml(a)}"/>` : escapeHtml(a) }</li>`).join('')}</ul>
+          </div>
+          <div style="margin-top:8px"><div style="font-weight:700;color:var(--muted);margin-bottom:6px">Vocabulary</div>
+            <div id="vocabList">${(wdata.vocab||[]).map((v,i)=> adminMode ? `<input class="vInput" data-i="${i}" value="${escapeHtml(v.word||v)}"/>` : `<button class="btn ghost" title="${escapeHtml(v.def||'')}">${escapeHtml(v.word||v)}</button>`).join('')}</div>
+          </div>
+          <div style="margin-top:8px"><div style="font-weight:700;color:var(--muted);margin-bottom:6px">Quiz</div>
+            <div id="quizList">${(wdata.quiz||[]).map((q,i)=> adminMode? `<div style="margin-bottom:8px"><input class="qq" data-i="${i}" value="${escapeHtml(q.q)}"/><input class="qa" data-i="${i}" value="${escapeHtml(q.a)}"/></div>` : `<div><strong>${escapeHtml(q.q)}</strong> <span style="color:var(--muted);margin-left:6px">(Ans: ${escapeHtml(q.a)})</span></div>`).join('')}</div>
+          </div>
+          ${ adminMode ? `<div style="margin-top:10px"><button id="saveWeek" class="btn primary">Save</button> <button id="cancelWeek" class="btn ghost">Cancel</button></div>` : '' }
+        </div>
+      `;
+      if(adminMode){
+        document.getElementById('saveWeek').onclick = ()=>{
+          const newTopic = document.getElementById('editTopic').value.trim();
+          const acts = Array.from(document.querySelectorAll('.actInput')).map(i=>i.value.trim()).filter(Boolean);
+          const vbs = Array.from(document.querySelectorAll('.vInput')).map(i=> ({word:i.value.trim(), def:''}) ).filter(Boolean);
+          const qqs = Array.from(document.querySelectorAll('.qq')).map((q,i)=> ({q:q.value.trim(), a: document.querySelectorAll('.qa')[i].value.trim()})).filter(Boolean);
+          const idx = data.findIndex(w=>w.week===week);
+          if(idx>-1){ data[idx] = {...data[idx], topic:newTopic, activities:acts, vocab:vbs, quiz:qqs}; curriculum[subject] = data; persist(KEYS.curriculum, curriculum); logActivity(`Teacher edited ${subject} week ${week}`); alert('Saved locally'); renderSubjectPortal(subject, curriculum[subject]); }
+        };
+        document.getElementById('cancelWeek').onclick = ()=> renderSubjectPortal(subject, data);
+      }
+    }
+    draw();
+  }
+
+  /* ---------- Games Hub (AuroraFace merged) ---------- */
+  function renderGamesHub(){
+    pageContainer.innerHTML = `
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h2>Games Hub</h2><div class="subtitle">Playful learning modules</div></div>
+          <div><button id="backHome" class="btn ghost">Home</button></div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="games-row">
+          <div class="game-card card">
+            <div style="font-size:38px">🎭</div>
+            <div style="font-weight:700;margin-top:6px">AuroraFace — Emotion Builder</div>
+            <div class="subtitle" style="margin-top:6px">Create faces and draw emotions</div>
+            <div style="height:8px"></div>
+            <button class="btn primary" id="launchAurora">Play</button>
+          </div>
+          <div class="game-card card">
+            <div style="font-size:38px">🧮</div>
+            <div style="font-weight:700;margin-top:6px">Connect-4 (Math)</div>
+            <div class="subtitle" style="margin-top:6px">Answer to drop pieces</div>
+            <div style="height:8px"></div>
+            <button class="btn ghost" id="launchC4">Play</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('backHome').onclick = ()=> renderHome();
+    document.getElementById('launchAurora').onclick = ()=> renderAuroraFace();
+    document.getElementById('launchC4').onclick = ()=> renderConnect4();
+    logActivity('Games Hub opened');
+  }
+
+  /* ---------- Yearbook ---------- */
+  function renderYearbook(){
+    const raw = localStorage.getItem('kk_yearbook_v1') || '[]';
+    const students = JSON.parse(raw) || [];
+    pageContainer.innerHTML = `
+      <div>
+        <h2>Yearbook</h2>
+        <div class="subtitle">Add & manage students</div>
+        <div style="height:12px"></div>
+        <div class="card">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input id="ybName" placeholder="Name" />
+            <input id="ybGrade" placeholder="Grade" type="number" style="width:90px" />
+            <input id="ybPhoto" placeholder="Photo URL" />
+            <input id="ybQuote" placeholder="Quote" />
+            <button class="btn primary" id="ybAdd">+ Add</button>
+          </div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="card">
+          <input id="ybSearch" placeholder="Search by name..." />
+          <div style="height:12px"></div>
+          <div class="year-grid" id="ybList"></div>
+        </div>
+      </div>
+    `;
+    function renderList(list){
+      const target = document.getElementById('ybList'); target.innerHTML = '';
+      if(!list.length){ target.innerHTML = '<div style="padding:20px;color:var(--muted)">No students yet</div>'; return; }
+      list.forEach(s=>{
+        const el = document.createElement('div'); el.className='student-card'; el.innerHTML = `<img class="student-photo" src="${escapeHtml(s.photo_url||'')}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'200\\' height=\\'200\\'><rect width=\\'100%\\' height=\\'100%\\' fill=\\'#f3f4f6\\' /><text x=\\'50%\\' y=\\'50%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' fill=\\'#9ca3af\\'>Photo</text></svg>'" /><div style="font-weight:700">${escapeHtml(s.name)}</div><div style="color:#e879f9;font-weight:600">Grade ${escapeHtml(String(s.grade))}</div><div style="font-style:italic;color:var(--muted);margin-top:6px">"${escapeHtml(s.quote||'')}"</div><div style="margin-top:8px"><button class="btn ghost" data-id="${s.id}" style="background:#fee2e2;color:#b91c1c">Delete</button></div>`; target.appendChild(el);
+      });
+      target.querySelectorAll('button[data-id]').forEach(b=> b.onclick = ()=>{
+        const id = b.getAttribute('data-id'); const newList = students.filter(x=>String(x.id)!==id); localStorage.setItem('kk_yearbook_v1', JSON.stringify(newList)); renderList(newList);
+      });
+    }
+    renderList(students);
+    document.getElementById('ybAdd').onclick = ()=> {
+      const name = document.getElementById('ybName').value.trim(); const grade = document.getElementById('ybGrade').value.trim(); const photo = document.getElementById('ybPhoto').value.trim(); const quote = document.getElementById('ybQuote').value.trim();
+      if(!name || !grade){ alert('Provide name & grade'); return; }
+      students.push({id:Date.now(), name, grade:Number(grade), photo_url:photo, quote});
+      localStorage.setItem('kk_yearbook_v1', JSON.stringify(students)); renderList(students);
+      document.getElementById('ybName').value=''; document.getElementById('ybGrade').value=''; document.getElementById('ybPhoto').value=''; document.getElementById('ybQuote').value='';
+    };
+    document.getElementById('ybSearch').oninput = ()=> { const q = document.getElementById('ybSearch').value.trim().toLowerCase(); renderList(students.filter(s=>s.name.toLowerCase().includes(q))); };
+  }
+
+  /* ---------- Ask the Teacher (student) ---------- */
+  function renderAskTeacher(){
+    pageContainer.innerHTML = `
+      <div>
+        <h2>Ask the Teacher</h2>
+        <div class="subtitle">Students can submit questions here</div>
+        <div style="height:12px"></div>
+        <div class="card">
+          <input id="stName" placeholder="Your name (optional)" />
+          <textarea id="stQuestion" placeholder="Type your question..." style="min-height:100px"></textarea>
+          <div style="margin-top:8px">
+            <button id="stSubmit" class="btn primary">Submit Question</button>
+            <button id="stClear" class="btn ghost">Clear</button>
+          </div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="card"><div style="font-weight:700">Recent Questions</div><div style="height:8px"></div><div id="stList"></div></div>
+      </div>
+    `;
+    function renderList(){
+      const list = retrieve(KEYS.qa, []);
+      const target = document.getElementById('stList'); target.innerHTML = '';
+      if(!list.length){ target.innerHTML = '<div style="color:var(--muted)">No questions yet</div>'; return; }
+      list.slice().reverse().forEach(item=>{
+        const div = document.createElement('div'); div.className='qa-item';
+        div.innerHTML = `<div style="font-weight:700">${escapeHtml(item.name||'Anonymous')}</div><div style="margin-top:6px">${escapeHtml(item.question)}</div><div style="font-size:12px;color:var(--muted);margin-top:6px">${new Date(item.at).toLocaleString()}</div>${ item.answer ? `<div style="margin-top:8px;background:rgba(0,0,0,0.03);padding:8px;border-radius:8px"><strong>Teacher:</strong> ${escapeHtml(item.answer)}</div>` : '' }`;
+        target.appendChild(div);
+      });
+    }
+    renderList();
+    document.getElementById('stSubmit').onclick = ()=>{
+      const name = document.getElementById('stName').value.trim(); const q = document.getElementById('stQuestion').value.trim();
+      if(!q){ alert('Please enter a question'); return; }
+      const entry = { id: uid('q'), name, question: q, answer:'', at: new Date().toISOString() };
+      qaBoard.push(entry); persist(KEYS.qa, qaBoard); logActivity('Question submitted'); alert('Question submitted — teacher will answer soon'); document.getElementById('stQuestion').value=''; renderList(); refreshQAList();
+    };
+    document.getElementById('stClear').onclick = ()=> { document.getElementById('stName').value=''; document.getElementById('stQuestion').value=''; };
+  }
+
+  /* ---------- Admin Modal ---------- */
+  function showModal(title, html){
+    modalTitle.textContent = title; modalBody.innerHTML = html; modalRoot.style.display='flex';
+  }
+  modalClose.onclick = ()=> modalRoot.style.display='none';
+
+  function verifyAdmin(){
+    const pass = prompt('Enter 4-digit teacher passcode:');
+    if(!pass) return false;
+    const stored = localStorage.getItem(KEYS.adminPass) || '1234';
+    if(String(pass) === String(stored)) return true;
+    alert('Incorrect passcode'); return false;
+  }
+
+  function showAdminModal(){
+    if(!verifyAdmin()) return;
+    const qaHtml = qaBoard.map(item=>`<div style="border-bottom:1px dashed rgba(255,255,255,0.03);padding:8px;margin-bottom:6px"><div style="font-weight:700">${escapeHtml(item.name||'Anonymous')}</div><div style="margin-top:6px">${escapeHtml(item.question)}</div><div style="margin-top:6px"><textarea data-id="${item.id}" placeholder="Write answer...">${escapeHtml(item.answer||'')}</textarea></div><div style="margin-top:6px"><button data-id="${item.id}" class="btn small primary">Save Answer</button></div></div>`).join('');
+    const html = `<div><h3>Teacher Admin</h3><div class="subtitle">Answer student questions & manage curriculum</div><div style="height:8px"></div><div style="max-height:280px;overflow:auto;padding:6px">${qaHtml||'<div style="color:var(--muted)">No questions</div>'}</div><div style="height:8px"></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button id="exportCurr" class="btn ghost">Export Curriculum JSON</button><button id="importCurr" class="btn ghost">Import Curriculum</button><input id="importFileAdmin" type="file" accept=".json" style="display:none" /><button id="changePassAdmin" class="btn ghost">Change Passcode</button><button id="closeAdmin" class="btn ghost">Close</button></div></div>`;
+    showModal('Teacher Admin', html);
+
+    // wire
+    setTimeout(()=>{
+      modalBody.querySelectorAll('button[data-id]').forEach(b=> b.onclick = ()=>{
+        const id = b.getAttribute('data-id'); const ta = modalBody.querySelector(`textarea[data-id="${id}"]`);
+        if(!ta) return;
+        const answer = ta.value.trim(); const idx = qaBoard.findIndex(x=>x.id===id);
+        if(idx>-1){ qaBoard[idx].answer = answer; qaBoard[idx].answered = !!answer; persist(KEYS.qa, qaBoard); logActivity('Teacher answered a question'); alert('Saved answer.'); refreshQAList(); showAdminModal(); }
+      });
+      document.getElementById('exportCurr').onclick = ()=> {
+        const payload = { exportedAt: new Date().toISOString(), curriculum, sentences: defaultSentences, qaBoard, activityLog };
+        const b = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'khaemenes_kindergarden_export.json'; a.click();
+      };
+      document.getElementById('importCurr').onclick = ()=> document.getElementById('importFileAdmin').click();
+      document.getElementById('importFileAdmin').onchange = async (e)=> {
+        const f = e.target.files[0]; if(!f) return;
+        try{
+          const txt = await f.text(); const obj = JSON.parse(txt);
+          if(obj.curriculum){ curriculum = obj.curriculum; persist(KEYS.curriculum, curriculum); buildMenu(); alert('Imported curriculum'); logActivity('Curriculum imported'); }
+          if(obj.sentences){ defaultSentences = obj.sentences; persist(KEYS.sentences, defaultSentences); alert('Imported sentences'); }
+          if(obj.qaBoard){ qaBoard = obj.qaBoard; persist(KEYS.qa, qaBoard); refreshQAList(); alert('Imported Q&A'); }
+          if(obj.activityLog){ activityLog = obj.activityLog; persist(KEYS.activity, activityLog); renderActivity(); alert('Imported activity log'); }
+        }catch(err){ alert('Import failed'); }
+        e.target.value='';
+      };
+      document.getElementById('changePassAdmin').onclick = ()=> {
+        const np = prompt('Enter new 4-digit passcode (numbers only):'); if(!np || !/^\d{4}$/.test(np)){ alert('Invalid'); return; } localStorage.setItem(KEYS.adminPass, np); alert('Passcode changed'); };
+      document.getElementById('closeAdmin').onclick = ()=> modalRoot.style.display='none';
+    }, 120);
+  }
+
+  /* ---------- Right panel QA list refresh ---------- */
+  function refreshQAList(){
+    const list = retrieve(KEYS.qa, []);
+    qaList.innerHTML = '';
+    if(!list.length) { qaList.innerHTML = '<div style="color:var(--muted)">No questions</div>'; return; }
+    list.slice().reverse().forEach(item=>{
+      const d = document.createElement('div'); d.className='qa-item'; d.innerHTML = `<div><strong>${escapeHtml(item.name||'Anonymous')}</strong> <small style="color:var(--muted)">${new Date(item.at).toLocaleString()}</small></div><div style="margin-top:6px">${escapeHtml(item.question)}</div>${ item.answer ? `<div style="margin-top:6px;background:rgba(0,0,0,0.04);padding:6px;border-radius:6px"><strong>Teacher:</strong> ${escapeHtml(item.answer)}</div>` : '<div style="margin-top:6px;color:var(--muted)">Awaiting answer</div>' }`; qaList.appendChild(d);
+    });
+  }
+  refreshQAList();
+
+  /* ---------- Contact Admin (simple copy fallback) ---------- */
+  document.getElementById('exportAllBtn').addEventListener('click', ()=> {
+    const payload = { exportedAt:new Date().toISOString(), curriculum, sentences: defaultSentences, qaBoard, activityLog };
+    const b = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'khaemenes_kindergarden_export.json'; a.click();
+  });
+
+  // Import / Export UI elements (top-right)
+  const importFile = document.createElement('input'); importFile.type = 'file'; importFile.accept = '.json'; importFile.style.display='none'; document.body.appendChild(importFile);
+  importAllBtn.addEventListener('click', ()=> importFile.click());
+  importFile.addEventListener('change', async (e)=> {
+    const f = e.target.files[0]; if(!f) return;
+    try{
+      const txt = await f.text(); const obj = JSON.parse(txt);
+      if(obj.curriculum){ curriculum = obj.curriculum; persist(KEYS.curriculum, curriculum); buildMenu(); }
+      if(obj.sentences){ defaultSentences = obj.sentences; persist(KEYS.sentences, defaultSentences); }
+      if(obj.qaBoard){ qaBoard = obj.qaBoard; persist(KEYS.qa, qaBoard); refreshQAList(); }
+      if(obj.activityLog){ activityLog = obj.activityLog; persist(KEYS.activity, obj.activityLog); activityLog = obj.activityLog; renderActivity(); }
+      alert('Import complete');
+      logActivity('Import completed');
+    }catch(err){ alert('Import failed: ' + (err && err.message || err)); }
+    e.target.value='';
+  });
+
+  /* ---------- AuroraFace module (merged) ---------- */
+  function renderAuroraFace(){
+    pageContainer.innerHTML = `
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h2>AuroraFace — Emotion Builder</h2><div class="subtitle">Friendly Aurora Sprite helps children express feelings</div></div>
+          <div><button id="backGames" class="btn ghost">Back</button></div>
+        </div>
+        <div style="height:12px"></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div class="card" style="min-width:420px">
+            <div style="display:flex;gap:12px">
+              <canvas id="faceCanvas" width="420" height="420"></canvas>
+              <div class="face-controls">
+                <label class="small">Face Shape</label>
+                <select id="faceShape"><option value="circle">Circle</option><option value="oval">Oval</option><option value="square">Square</option><option value="heart">Heart</option></select>
+                <label class="small">Eye Color</label><input type="color" id="eyeColor" value="#000000" />
+                <label class="small">Hair Color</label><input type="color" id="hairColor" value="#8B4513" />
+                <label class="small">Skin Color</label><input type="color" id="skinColor" value="#ffd8b0" />
+                <label class="small">Hair / Hat</label>
+                <select id="hairStyle"><option value="none">None</option><option value="short">Short</option><option value="long">Long</option><option value="pigtails">Pigtails</option><option value="cap">Cap</option><option value="party">Party Hat</option></select>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                  <button id="clearFace" class="btn ghost small">Clear</button>
+                  <button id="playSentence" class="btn primary small">Play Sentence</button>
+                </div>
+                <label class="small" style="margin-top:8px">Choose Sentence</label>
+                <select id="sentenceSelect" style="width:100%"></select>
+                <div style="margin-top:8px"><button id="teacherEditSentences" class="btn ghost small">Edit Sentences</button></div>
+              </div>
+            </div>
+            <div style="height:8px"></div>
+            <div class="subtitle">Draw a mouth — keep strokes smooth. The drawing logic prevents jumpy lines.</div>
+          </div>
+
+          <div class="card" style="flex:1">
+            <div><strong>Save / Export</strong></div>
+            <div style="height:8px"></div>
+            <div style="display:flex;gap:8px">
+              <button id="saveFace" class="btn primary">Save Locally</button>
+              <button id="downloadFace" class="btn ghost">Export JSON</button>
+            </div>
+            <div style="height:12px"></div>
+            <div><label class="small">Saved Faces</label><div id="savedList" style="max-height:260px;overflow:auto"></div></div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('backGames').onclick = ()=> renderGamesHub();
+
+    // sentences persisted
+    let sentences = retrieve(KEYS.sentences, defaultSentences.slice());
+    function populateSentences(){ const sel = document.getElementById('sentenceSelect'); sel.innerHTML = sentences.map((s,i)=>`<option value="${i}">${escapeHtml(s)}</option>`).join(''); }
+    populateSentences();
+
+    document.getElementById('teacherEditSentences').onclick = ()=> {
+      if(!verifyAdmin()) return;
+      const txt = prompt('Edit sentences (one per line):', sentences.join('\n'));
+      if(txt!==null){ const arr = txt.split('\n').map(x=>x.trim()).filter(Boolean); sentences = arr; persist(KEYS.sentences, sentences); populateSentences(); logActivity('Teacher edited Aurora sentences'); }
+    };
+
+    // canvas drawing
+    const canvas = document.getElementById('faceCanvas'); const ctx = canvas.getContext('2d');
+    const faceState = { drawingData: null };
+    function drawFaceBase(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      const shape = document.getElementById('faceShape').value;
+      const eyeColor = document.getElementById('eyeColor').value;
+      const hairColor = document.getElementById('hairColor').value;
+      const skinColor = document.getElementById('skinColor').value;
+      const hairStyle = document.getElementById('hairStyle').value;
+      // face
+      ctx.fillStyle = skinColor; ctx.beginPath();
+      if(shape==='circle') ctx.arc(210,140,110,0,Math.PI*2);
+      else if(shape==='oval'){ ctx.save(); ctx.translate(210,140); ctx.scale(1,1.15); ctx.arc(0,0,95,0,Math.PI*2); ctx.restore(); }
+      else if(shape==='square'){ ctx.rect(100,40,220,220); }
+      else if(shape==='heart'){ ctx.moveTo(210,260); ctx.bezierCurveTo(210,180,120,120,160,100); ctx.bezierCurveTo(200,80,210,120,210,140); ctx.bezierCurveTo(210,120,220,80,250,100); ctx.bezierCurveTo(290,120,210,180,210,260); }
+      ctx.fill();
+      // hair
+      ctx.fillStyle = hairColor;
+      if(hairStyle==='short'){ ctx.beginPath(); ctx.arc(210,60,120,Math.PI,Math.PI*2); ctx.fill(); }
+      else if(hairStyle==='long'){ ctx.beginPath(); ctx.moveTo(100,140); ctx.lineTo(320,140); ctx.lineTo(320,300); ctx.lineTo(100,300); ctx.closePath(); ctx.fill(); }
+      else if(hairStyle==='pigtails'){ ctx.beginPath(); ctx.arc(80,160,36,0,Math.PI*2); ctx.arc(340,160,36,0,Math.PI*2); ctx.fill(); }
+      else if(hairStyle==='cap'){ ctx.beginPath(); ctx.arc(210,90,120,Math.PI,Math.PI*2); ctx.fill(); ctx.fillStyle='#0044cc'; ctx.fillRect(150,80,120,18); }
+      else if(hairStyle==='party'){ ctx.fillStyle='#ff6699'; ctx.beginPath(); ctx.moveTo(210,20); ctx.lineTo(270,110); ctx.lineTo(150,110); ctx.closePath(); ctx.fill(); }
+      // eyes
+      ctx.fillStyle = eyeColor; ctx.beginPath(); ctx.arc(170,140,12,0,Math.PI*2); ctx.arc(250,140,12,0,Math.PI*2); ctx.fill();
+      // restore saved drawing (mouth)
+      if(faceState.drawingData){
+        const img = new Image(); img.onload = ()=> { ctx.drawImage(img,0,0,canvas.width,canvas.height); }; img.src = faceState.drawingData;
+      }
+    }
+    drawFaceBase();
+
+    // drawing safety: prevent jumping by resetting path
+    let drawing=false;
+    function toLocal(e){ const r = canvas.getBoundingClientRect(); return {x: e.clientX - r.left, y: e.clientY - r.top}; }
+    canvas.addEventListener('mousedown', (e)=>{ drawing=true; const p=toLocal(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); });
+    canvas.addEventListener('mouseup', ()=>{ if(drawing){ drawing=false; ctx.closePath(); faceState.drawingData = canvas.toDataURL('image/png'); }});
+    canvas.addEventListener('mouseleave', ()=>{ drawing=false; ctx.closePath(); });
+    canvas.addEventListener('mousemove', (e)=>{ if(!drawing) return; const p=toLocal(e); ctx.lineTo(p.x,p.y); ctx.strokeStyle='#111'; ctx.lineWidth=4; ctx.lineCap='round'; ctx.stroke(); });
+
+    // redraw base on control change
+    ['faceShape','eyeColor','hairColor','skinColor','hairStyle'].forEach(id=> document.getElementById(id).addEventListener('change', ()=> drawFaceBase()));
+
+    document.getElementById('clearFace').onclick = ()=> { faceState.drawingData = null; drawFaceBase(); };
+
+    // sentences play
+    document.getElementById('playSentence').onclick = ()=> {
+      const idx = Number(document.getElementById('sentenceSelect').value || 0);
+      const s = sentences[idx] || '';
+      if(s){ speakSoft(s,'earthly'); logActivity('Played sentence'); }
+    };
+
+    // teacher edit (also accessible from admin)
+    document.getElementById('teacherEditSentences').addEventListener('click', ()=> {
+      if(!verifyAdmin()) return;
+      const txt = prompt('Edit sentences (one per line):', sentences.join('\n'));
+      if(txt!==null){ sentences = txt.split('\n').map(x=>x.trim()).filter(Boolean); persist(KEYS.sentences, sentences); populateSentences(); logActivity('Teacher edited sentences'); }
+    });
+
+    // save / export
+    document.getElementById('saveFace').onclick = ()=> {
+      const saved = retrieve(KEYS.faces, []);
+      const entry = { id: uid('face'), created: new Date().toISOString(), shape: document.getElementById('faceShape').value, eyeColor: document.getElementById('eyeColor').value, hairColor: document.getElementById('hairColor').value, skinColor: document.getElementById('skinColor').value, hairStyle: document.getElementById('hairStyle').value, drawing: canvas.toDataURL('image/png'), sentenceIdx: Number(document.getElementById('sentenceSelect').value || 0) };
+      saved.push(entry); persist(KEYS.faces, saved); renderSavedList(); logActivity('Saved face');
+      alert('Saved locally');
+    };
+    document.getElementById('downloadFace').onclick = ()=> {
+      const saved = retrieve(KEYS.faces, []); const b = new Blob([JSON.stringify(saved,null,2)], {type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='khaemenes_faces_export.json'; a.click();
+    };
+    function renderSavedList(){
+      const list = retrieve(KEYS.faces, []);
+      const target = document.getElementById('savedList'); target.innerHTML='';
+      if(!list.length){ target.innerHTML = '<div style="color:var(--muted)">No saved faces</div>'; return; }
+      list.slice().reverse().forEach(item=>{
+        const div=document.createElement('div'); div.style.display='flex'; div.style.gap='8px'; div.style.alignItems='center'; div.style.marginBottom='8px';
+        const img = document.createElement('img'); img.src = item.drawing; img.style.width='60px'; img.style.height='60px'; img.style.borderRadius='8px';
+        const meta = document.createElement('div'); meta.innerHTML = `<div style="font-weight:700">Saved ${new Date(item.created).toLocaleString()}</div><div style="font-size:12px;color:var(--muted)">Sentence: ${escapeHtml((sentences[item.sentenceIdx]||'').slice(0,40))}</div>`;
+        const del = document.createElement('button'); del.className='btn small ghost'; del.textContent='Delete'; del.onclick = ()=> { const arr = retrieve(KEYS.faces,[]).filter(x=>x.id!==item.id); persist(KEYS.faces, arr); renderSavedList(); logActivity('Deleted saved face'); };
+        div.appendChild(img); div.appendChild(meta); div.appendChild(del); target.appendChild(div);
+      });
+    }
+    renderSavedList();
+  }
+
+  /* ---------- Simple Connect-4 placeholder (math) ---------- */
+  function renderConnect4(){
+    pageContainer.innerHTML = `<div><h2>Connect-4 — Math (Demo)</h2><div class="subtitle">This mini-game is a demo placeholder</div><div style="height:12px"></div><div class="card"><p>Answer a question to drop a piece. (Full implementation available)</p><div style="height:12px"></div><button id="backToGames" class="btn ghost">Back</button></div></div>`;
+    document.getElementById('backToGames').onclick = ()=> renderGamesHub();
+  }
+
+  /* ---------- Export / Import (top-right buttons) ---------- */
+  // exportAllBtn wired above
+  // importAllBtn wired above (uses dynamic input created earlier)
+
+  /* ---------- Ask submit (right panel) ---------- */
+  document.getElementById('askSubmit').addEventListener('click', ()=> {
+    const name = document.getElementById('askName').value.trim(); const q = document.getElementById('askQuestion').value.trim();
+    if(!q){ alert('Please enter a question'); return; }
+    const entry = { id: uid('q'), name, question: q, answer:'', at: new Date().toISOString() };
+    qaBoard.push(entry); persist(KEYS.qa, qaBoard); document.getElementById('askQuestion').value=''; document.getElementById('askName').value=''; alert('Question submitted'); refreshQAList(); logActivity('Student question submitted');
+  });
+  document.getElementById('askClear').addEventListener('click', ()=> { document.getElementById('askQuestion').value=''; document.getElementById('askName').value=''; });
+
+  /* ---------- Admin login / change pass (left) ---------- */
+  document.getElementById('adminLogin').addEventListener('click', ()=> { if(verifyAdmin()) alert('Teacher logged in (Admin modal accessible from menu).'); });
+  document.getElementById('changePassBtn').addEventListener('click', ()=> { if(!verifyAdmin()) return; const np = prompt('Enter new 4-digit passcode (numbers only):'); if(!np || !/^\d{4}$/.test(np)){ alert('Invalid'); return; } localStorage.setItem(KEYS.adminPass, np); alert('Passcode updated'); });
+
+  /* ---------- Utility: refresh QA list & activity ---------- */
+  function refreshQAList(){ qaList.innerHTML=''; const list = retrieve(KEYS.qa, []); if(!list.length){ qaList.innerHTML = '<div style="color:var(--muted)">No questions</div>'; return; } list.slice().reverse().forEach(item=>{ const div=document.createElement('div'); div.className='qa-item'; div.innerHTML = `<div><strong>${escapeHtml(item.name||'Anonymous')}</strong> <small style="color:var(--muted)">${new Date(item.at).toLocaleString()}</small></div><div style="margin-top:6px">${escapeHtml(item.question)}</div>${ item.answer ? `<div style="margin-top:6px;background:rgba(0,0,0,0.04);padding:6px;border-radius:6px"><strong>Teacher:</strong> ${escapeHtml(item.answer)}</div>` : '<div style="margin-top:6px;color:var(--muted)">Awaiting answer</div>' }`; qaList.appendChild(div); }); }
+  refreshQAList();
+
+  /* ---------- Initial boot ---------- */
+  document.getElementById('homeBtn').addEventListener('click', ()=> renderHome());
+  document.getElementById('subjectsBtn').addEventListener('click', ()=> renderSubjects());
+  document.getElementById('gamesBtn').addEventListener('click', ()=> renderGamesHub());
+  document.getElementById('menuToggle').addEventListener('click', ()=> menuPanel.style.display = menuPanel.style.display==='none' ? 'block' : 'none');
+  document.getElementById('modalClose').addEventListener('click', ()=> modalRoot.style.display='none');
+
+  // show home
+  renderHome();
+  logActivity('Khaemenes Kinder Garden loaded');
+
+  // Expose a few helpers (optional)
+  window.Khaemenes = { renderAuroraFace, renderGamesHub, renderSubjectPortal: renderSubjectPortal, renderConnect4, exportAll: ()=> exportAllBtn.click() };
+
+})();
+</script>
+</body>
+</html>
