@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khaemenes Academy - Kindergarten PE Portal</title>
+<style>
+  body {
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    margin: 0;
+    background: linear-gradient(to bottom right, #FFFA70, #FF8DAA);
+    color: #333;
+  }
+
+  header {
+    background-color: #FF6F91;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    font-size: 2em;
+  }
+
+  .mascot {
+    width: 120px;
+    display: block;
+    margin: 10px auto;
+  }
+
+  .container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .lesson-card {
+    background-color: #FFE2A3;
+    border: 2px solid #FFB347;
+    border-radius: 15px;
+    margin: 10px;
+    padding: 20px;
+    width: 200px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .lesson-card:hover {
+    transform: scale(1.05);
+  }
+
+  .quiz-container {
+    display: none;
+    background-color: #C3FBD8;
+    margin: 20px;
+    padding: 20px;
+    border-radius: 15px;
+  }
+
+  button {
+    background-color: #FFB347;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 1em;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  button:hover {
+    background-color: #FF8DAA;
+  }
+
+  .progress {
+    text-align: center;
+    margin: 20px;
+    font-size: 1.2em;
+  }
+
+  .confetti {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+</style>
+</head>
+<body>
+
+<header>
+  🏃 Khaemenes Academy Kindergarten PE Portal 🏃
+</header>
+
+<img src="boppi.png" alt="Boppi the Kangaroo" class="mascot">
+
+<div class="progress" id="progress">Lesson: 0 / 42</div>
+
+<div class="container" id="lessonContainer">
+  <!-- Lesson cards will be injected here -->
+</div>
+
+<div class="quiz-container" id="quizContainer">
+  <h2 id="quizTitle">Quiz</h2>
+  <div id="quizQuestions"></div>
+  <button id="submitQuiz">Submit Quiz</button>
+</div>
+
+<canvas id="confettiCanvas" class="confetti"></canvas>
+
+<script>
+  const lessons = [
+    {id: 1, title: "Hop & Skip"},
+    {id: 2, title: "Run & Stop"},
+    {id: 3, title: "Walk Like Animals"},
+    {id: 4, title: "Balance Beam Fun"},
+    {id: 5, title: "Twist & Turn"},
+    {id: 6, title: "Movement Parade"},
+    {id: 7, title: "Roll & Catch"},
+    {id: 8, title: "Toss & Aim"},
+    {id: 9, title: "Kick It"},
+    {id: 10, title: "Bounce & Catch"},
+    {id: 11, title: "Object Obstacle"},
+    {id: 12, title: "Ball Parade"},
+    {id: 13, title: "Stretch & Reach"},
+    {id: 14, title: "Jumping Jacks Fun"},
+    {id: 15, title: "Hydration & Move"},
+    {id: 16, title: "Breathing Buddies"},
+    {id: 17, title: "Fitness Fun Relay"},
+    {id: 18, title: "My Fitness Journal"},
+    {id: 19, title: "Stop & Go"},
+    {id: 20, title: "High & Low"},
+    {id: 21, title: "Pathways Adventure"},
+    {id: 22, title: "Personal Space Bubble"},
+    {id: 23, title: "Mirror Me"},
+    {id: 24, title: "Space Parade"},
+    {id: 25, title: "Follow the Leader"},
+    {id: 26, title: "Team Toss"},
+    {id: 27, title: "Sharing Fun"},
+    {id: 28, title: "Partner Balance"},
+    {id: 29, title: "Group Relay"},
+    {id: 30, title: "Cooperative Challenge"},
+    {id: 31, title: "Dance Party"},
+    {id: 32, title: "Animal Moves"},
+    {id: 33, title: "Rhythm Stomp"},
+    {id: 34, title: "Shape Movers"},
+    {id: 35, title: "Freeze Dance"},
+    {id: 36, title: "Creative Parade"},
+    {id: 37, title: "Skill Parade"},
+    {id: 38, title: "Obstacle Adventure"},
+    {id: 39, title: "PE Review Game"},
+    {id: 40, title: "Fitness Fun Relay"},
+    {id: 41, title: "Badge Ceremony"},
+    {id: 42, title: "Boppi’s Celebration"},
+  ];
+
+  const quizzes = {}; // Inject quiz questions for each lesson here
+  // Example: quizzes[1] = [{q:"Hop on one foot?", options:["Yes","No"], correct:0}, ...]
+
+  let currentLesson = 0;
+
+  const lessonContainer = document.getElementById('lessonContainer');
+  const quizContainer = document.getElementById('quizContainer');
+  const quizQuestions = document.getElementById('quizQuestions');
+  const submitQuiz = document.getElementById('submitQuiz');
+  const progress = document.getElementById('progress');
+
+  // Create lesson cards
+  lessons.forEach(lesson => {
+    const card = document.createElement('div');
+    card.className = 'lesson-card';
+    card.innerText = lesson.title;
+    card.addEventListener('click', () => openLesson(lesson.id));
+    lessonContainer.appendChild(card);
+  });
+
+  function openLesson(id) {
+    currentLesson = id;
+    progress.innerText = `Lesson: ${id} / 42`;
+    loadQuiz(id);
+  }
+
+  function loadQuiz(id) {
+    lessonContainer.style.display = 'none';
+    quizContainer.style.display = 'block';
+    quizTitle.innerText = `Lesson ${id} Quiz`;
+    quizQuestions.innerHTML = '';
+
+    if (!quizzes[id]) {
+      quizzes[id] = [
+        {q: "Sample Question 1?", options:["A","B","C"], correct:0},
+        {q: "Sample Question 2?", options:["A","B","C"], correct:1},
+        {q: "Sample Question 3?", options:["A","B","C"], correct:2},
+        {q: "Sample Question 4?", options:["A","B","C"], correct:0},
+        {q: "Sample Question 5?", options:["A","B","C"], correct:1},
+      ];
+    }
+
+    quizzes[id].forEach((item, index) => {
+      const qDiv = document.createElement('div');
+      qDiv.innerHTML = `<p>${index+1}. ${item.q}</p>`;
+      item.options.forEach((opt, i) => {
+        qDiv.innerHTML += `<label><input type="radio" name="q${index}" value="${i}"> ${opt}</label><br>`;
+      });
+      quizQuestions.appendChild(qDiv);
+    });
+  }
+
+  submitQuiz.addEventListener('click', () => {
+    let score = 0;
+    quizzes[currentLesson].forEach((item, index) => {
+      const answer = document.querySelector(`input[name="q${index}"]:checked`);
+      if (answer && parseInt(answer.value) === item.correct) score++;
+    });
+    alert(`You got ${score} / 5 correct!`);
+    showConfetti();
+    quizContainer.style.display = 'none';
+    lessonContainer.style.display = 'flex';
+  });
+
+  function showConfetti() {
+    const canvas = document.getElementById('confettiCanvas');
+    canvas.style.display = 'block';
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const particles = [];
+    for (let i=0;i<100;i++) {
+      particles.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, r: Math.random()*5+2, color:`hsl(${Math.random()*360},100%,50%)`, speed:Math.random()*2+1});
+    }
+    let frame = 0;
+    function animate() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      particles.forEach(p=>{
+        ctx.fillStyle=p.color;
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fill();
+        p.y += p.speed;
+        if (p.y>canvas.height)p.y=0;
+      });
+      frame++;
+      if(frame<100) requestAnimationFrame(animate);
+      else canvas.style.display='none';
+    }
+    animate();
+  }
+
+</script>
+
+</body>
+</html>
