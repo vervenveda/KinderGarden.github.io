@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Kinder History Adventure — 42 Weeks (3 Q / day)</title>
+<style>
+  :root{
+    --bg1:#fff7e6; --bg2:#e6f7ff; --ink:#0f172a; --muted:#6b7280; --card:#fff;
+    --accent:#ff7a59; --ok:#10b981; --warn:#f59e0b; --ring:#ffe8d6;
+    --radius:18px; --shadow:0 18px 60px rgba(0,0,0,.08);
+    --font: "Comic Sans MS", "Chalkboard SE", Poppins, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --mono: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0;font-family:var(--font);background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink)}
+  header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.9);backdrop-filter:saturate(140%) blur(6px);border-bottom:1px solid #f1f5f9}
+  .wrap{max-width:1100px;margin:0 auto;padding:14px 16px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand h1{margin:0;font-size:1.2rem}
+  .brand small{color:var(--muted)}
+  nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  nav a{text-decoration:none;color:var(--ink);background:#eef2f7;padding:8px 12px;border-radius:999px;border:1px solid #e5e7eb;font-weight:700}
+  nav a:hover{background:#e5edf2}
+  main{padding:16px 0 80px}
+  .grid{display:grid;gap:14px;grid-template-columns:1.2fr 1fr}
+  @media (max-width:980px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid #e6e8eb;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+  h2{margin:6px 0 8px;font-size:1.05rem}
+  p.sub{margin:0;color:var(--muted)}
+  .weeks{display:grid;gap:8px;grid-template-columns:repeat(7,1fr)}
+  @media (max-width:980px){.weeks{grid-template-columns:repeat(4,1fr)}}
+  @media (max-width:640px){.weeks{grid-template-columns:repeat(2,1fr)}}
+  .wk{border:1px solid #e5e7eb;border-radius:14px;padding:10px;background:#fff;cursor:pointer;position:relative;text-align:left}
+  .wk h3{margin:0 0 4px;font-size:.95rem}
+  .wk small{color:var(--muted)}
+  .wk .star{position:absolute;right:8px;top:8px;font-size:1.1rem}
+  .wk.active{outline:3px solid var(--ring)}
+  .days{display:flex;gap:8px;flex-wrap:wrap}
+  .day{padding:8px 12px;border-radius:12px;border:1px solid #e5e7eb;background:#fff;cursor:pointer}
+  .day.done{background:#dcfce7;border-color:#86efac}
+  .panel{border:1px solid #eef1f4;border-radius:12px;padding:12px}
+  .pill{display:inline-flex;gap:8px;padding:6px 10px;border-radius:999px;background:#f2f5f7;color:#374151;font-size:.85rem}
+  .btn{appearance:none;border:0;background:var(--accent);color:#fff;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:800;box-shadow:0 6px 18px rgba(255,122,89,.25)}
+  .btn:hover{filter:brightness(.98)}
+  .btn.ghost{background:transparent;border:1px solid #d9dce1;color:var(--ink);box-shadow:none}
+  .btn.ok{background:var(--ok)}
+  .btn.warn{background:var(--warn)}
+  .opt{padding:12px;border:2px solid #cbd5e1;border-radius:14px;background:#fff;cursor:pointer;text-align:left;font-size:1rem}
+  .opt:hover{background:#f8fafc}
+  .opt.correct{border-color:#86efac;background:#ecfdf5}
+  .opt.wrong{border-color:#fecaca;background:#fff1f2}
+  .big{font-size:1.08rem}
+  .mono{font-family:var(--mono)}
+  .reading{max-height:220px;overflow:auto;border:1px dashed #e5e7eb;border-radius:10px;padding:10px;background:#fafbfc}
+  footer{text-align:center;color:var(--muted);padding:24px 0}
+  .sticker{font-size:1.6rem;display:inline-block;margin-right:6px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <div style="font-size:1.4rem">🏛️</div>
+      <h1>Kinder History Adventure — 42 Weeks × 5 Days × 3 Questions</h1>
+      <small class="mono">Vanilla JS • Offline • Saves Progress</small>
+    </div>
+    <nav>
+      <a href="#plan">Weeks</a>
+      <a href="#play">Play</a>
+      <a href="#teacher">Teacher</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- PLAN -->
+  <section id="plan" class="card">
+    <h2>📅 Year Plan</h2>
+    <p class="sub">Pick a week, then pick a day (Mon–Fri). Each day has 3 questions. ⭐ shows when a day is completed.</p>
+    <div id="weeks" class="weeks" aria-live="polite"></div>
+  </section>
+
+  <!-- PLAY -->
+  <section id="play" class="card">
+    <h2>🎮 Play</h2>
+    <p class="sub"><span class="pill">Week <b id="uiWeek">1</b></span> <span class="pill">Day <b id="uiDay">Mon</b></span> <span class="pill">Theme: <b id="uiTheme">Community & Helpers</b></span></p>
+    <div class="grid">
+      <div class="panel">
+        <div class="row">
+          <div class="pill">Question <b id="qNum">0</b>/3</div>
+          <div class="pill">Score <b id="score">0</b></div>
+        </div>
+        <div id="qText" class="big" style="margin:8px 0">Choose a week and day, then press Start.</div>
+        <div id="qOptions" class="reading"></div>
+        <div id="qMsg" class="sub"></div>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="btnStart">Start Today’s 3 Questions</button>
+          <button class="btn ghost" id="btnNext">Next</button>
+          <button class="btn ok" id="btnFinish">Finish Day</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin:2px 0 6px">🧠 What we learn</h3>
+        <div id="weekNote" class="reading mono"></div>
+        <div style="margin-top:8px">
+          <span class="pill">Stickers earned: <span id="stickers"></span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEACHER -->
+  <section id="teacher" class="card">
+    <h2>🧑‍🏫 Teacher</h2>
+    <p class="sub">Jump to a week/day, export or reset progress. You can edit/add questions in the code under <code>QUESTION_BANK</code>.</p>
+    <div class="panel">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <label>Week <input id="jumpWeek" type="number" min="1" max="42" value="1" style="width:90px"></label>
+        <label>Day
+          <select id="jumpDay">
+            <option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option>
+          </select>
+        </label>
+        <button class="btn" id="goJump">Go</button>
+        <button class="btn ghost" id="exportBtn">Export Progress (.json)</button>
+        <button class="btn warn" id="resetBtn">Reset Year</button>
+      </div>
+      <div id="dump" class="reading mono" style="margin-top:10px;max-height:220px"></div>
+    </div>
+  </section>
+</main>
+
+<footer><small class="mono">© Khaemenes Academy • Kinder History Adventure • No external libraries</small></footer>
+
+<script>
+/* ----------------- helpers ----------------- */
+const $=s=>document.querySelector(s);
+const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=(a,n)=>shuffle(a.slice()).slice(0,n);
+function toast(msg){const t=document.createElement('div');t.textContent=msg;Object.assign(t.style,{position:'fixed',right:'14px',bottom:'14px',background:'#111827',color:'#fff',padding:'10px 14px',borderRadius:'10px',zIndex:9999});document.body.appendChild(t);setTimeout(()=>t.remove(),1400);}
+
+/* ----------------- themes schedule (42 weeks) ----------------- */
+const THEMES = [
+  "Community & Helpers","Rules & Kindness","Yesterday • Today • Tomorrow",
+  "Maps & Globes (basic)","Our Places (Home/School/Library)","Then & Now (Old vs New)",
+  "Transportation","Family & Traditions","Needs & Wants",
+  "Jobs & Tools","Neighborhood & Safety","Calendar & Seasons",
+  "American Symbols","Land & Water","Famous Helpers",
+  "School & Classroom","Communication (Mail/Phone)","Food & Farming",
+  "Shelter & Clothing","Games from the Past","Music & Celebrations",
+  "Transportation (review)","Maps (review)","Rules (review)",
+  "Our Town Helpers","Nature & Parks","Travel Near/Far",
+  "Inventions (simple)","Helping Our Planet","Working Together",
+  "Neighborhood History","Holidays (general)","Leaders & Teams",
+  "Landmarks (basic)","Time Words (review)","Community Stories",
+  "Then & Now (review)","Symbols (review)","My Timeline",
+  "Big Feelings & Fair Play","Plan a Class Trip","Year in Review"
+];
+// repeat/cycle if needed
+const WEEK_THEME = Array.from({length:42},(_,i)=>THEMES[i%THEMES.length]);
+
+/* ----------------- question bank -----------------
+   Each item shape:
+   { type:"mc"|"tf", q:"text", a:"Correct", choices:["A","B","C"] }  (for mc)
+   { type:"tf", q:"text", a:true } (for true/false)
+*/
+const QUESTION_BANK = {
+  "Community & Helpers": [
+    {type:"mc", q:"Who helps put out fires?", a:"Firefighter", choices:["Firefighter","Librarian","Chef","Pilot"]},
+    {type:"mc", q:"Who teaches you in class?", a:"Teacher", choices:["Teacher","Mechanic","Lifeguard","Baker"]},
+    {type:"mc", q:"Who helps when someone is very sick?", a:"Doctor", choices:["Doctor","Artist","Gardener","Driver"]},
+    {type:"mc", q:"Who brings letters to your home?", a:"Mail Carrier", choices:["Mail Carrier","Dancer","Painter","Carpenter"]},
+    {type:"mc", q:"Who checks out your books at the library?", a:"Librarian", choices:["Librarian","Electrician","Plumber","Coach"]},
+    {type:"tf", q:"True or False: A police officer helps keep people safe.", a:true},
+    {type:"tf", q:"True or False: A firefighter uses a stethoscope.", a:false}
+  ],
+  "Rules & Kindness": [
+    {type:"tf", q:"We raise our hand and wait our turn.", a:true},
+    {type:"tf", q:"Taking turns means everyone goes at once.", a:false},
+    {type:"mc", q:"What is kind?", a:"Sharing crayons", choices:["Sharing crayons","Pushing in line","Yelling","Taking toys"]},
+    {type:"mc", q:"What helps everyone feel safe?", a:"Following rules", choices:["Following rules","Running in halls","Shouting","Hiding toys"]},
+    {type:"tf", q:"Saying 'please' and 'thank you' is kind.", a:true}
+  ],
+  "Yesterday • Today • Tomorrow": [
+    {type:"mc", q:"What word means the day after today?", a:"Tomorrow", choices:["Tomorrow","Yesterday","Last week","A long time ago"]},
+    {type:"mc", q:"What word means the day before today?", a:"Yesterday", choices:["Yesterday","Tomorrow","Next week","Soon"]},
+    {type:"tf", q:"True or False: Today is the day we are in right now.", a:true},
+    {type:"tf", q:"True or False: Yesterday comes after tomorrow.", a:false}
+  ],
+  "Maps & Globes (basic)": [
+    {type:"mc", q:"What is a globe?", a:"A small model of Earth", choices:["A small model of Earth","A big cookie","A kite","A backpack"]},
+    {type:"tf", q:"A map is flat.", a:true},
+    {type:"tf", q:"A globe is flat.", a:false},
+    {type:"mc", q:"What blue shapes on maps usually show?", a:"Water", choices:["Water","Mountains only","Houses","Books"]},
+    {type:"mc", q:"What tool shows the four directions?", a:"Compass", choices:["Compass","Pencil","Ruler","Button"]}
+  ],
+  "Our Places (Home/School/Library)": [
+    {type:"mc", q:"Where do you borrow books?", a:"Library", choices:["Library","Bakery","Garage","Farm"]},
+    {type:"mc", q:"Where do you learn with your class?", a:"School", choices:["School","Airport","Restaurant","Forest"]},
+    {type:"tf", q:"Your home is a place where your family lives.", a:true}
+  ],
+  "Then & Now (Old vs New)": [
+    {type:"mc", q:"Which is older?", a:"Wagon", choices:["Wagon","Car","Spaceship","Scooter"]},
+    {type:"tf", q:"Phones long ago had cords and big buttons.", a:true},
+    {type:"tf", q:"People long ago used candles for light.", a:true},
+    {type:"tf", q:"Airplanes are older than horses.", a:false}
+  ],
+  "Transportation": [
+    {type:"mc", q:"Which vehicle flies in the sky?", a:"Airplane", choices:["Airplane","Bus","Bicycle","Boat"]},
+    {type:"mc", q:"Which travels on rails?", a:"Train", choices:["Train","Car","Skateboard","Submarine"]},
+    {type:"tf", q:"Boats can move on water.", a:true}
+  ],
+  "Family & Traditions": [
+    {type:"mc", q:"A tradition is something you do…", a:"again and again", choices:["again and again","only once","never","only at school"]},
+    {type:"tf", q:"Families can celebrate in different ways.", a:true},
+    {type:"tf", q:"Only one kind of family is real.", a:false}
+  ],
+  "Needs & Wants": [
+    {type:"mc", q:"Which is a need?", a:"Water", choices:["Water","Video game","Glitter shoes","Candy"]},
+    {type:"mc", q:"Which is a want?", a:"Toy robot", choices:["Toy robot","Healthy food","Warm coat","Home"]},
+    {type:"tf", q:"We need food and shelter to live.", a:true}
+  ],
+  "Jobs & Tools": [
+    {type:"mc", q:"Which tool does a builder use?", a:"Hammer", choices:["Hammer","Paintbrush","Stethoscope","Whistle"]},
+    {type:"mc", q:"Which tool does a doctor use?", a:"Stethoscope", choices:["Stethoscope","Tractor","Drum","Flag"]},
+    {type:"tf", q:"Chefs use ovens to cook food.", a:true}
+  ],
+  "Neighborhood & Safety": [
+    {type:"mc", q:"You walk with a grown-up and look both ways at…", a:"A street", choices:["A street","A slide","A book","A tree"]},
+    {type:"tf", q:"Wear a helmet when you ride a bike.", a:true},
+    {type:"tf", q:"It’s okay to talk to any stranger alone.", a:false}
+  ],
+  "Calendar & Seasons": [
+    {type:"mc", q:"How many days in a school week?", a:"5", choices:["5","3","6","10"]},
+    {type:"mc", q:"Which is a season?", a:"Winter", choices:["Winter","Pumpkin","Tuesday","Morning"]},
+    {type:"tf", q:"Spring comes after winter.", a:true}
+  ],
+  "American Symbols": [
+    {type:"mc", q:"The flag’s colors are…", a:"Red, white, and blue", choices:["Red, white, and blue","Green and orange","Black and pink","Purple and yellow"]},
+    {type:"mc", q:"The national bird is the…", a:"Bald eagle", choices:["Bald eagle","Penguin","Ostrich","Parrot"]},
+    {type:"tf", q:"The Statue of Liberty is green.", a:true}
+  ],
+  "Land & Water": [
+    {type:"mc", q:"A lake is…", a:"Water", choices:["Water","A mountain","A road","A house"]},
+    {type:"mc", q:"A hill is…", a:"Land", choices:["Land","Water","Cloud","Bridge"]},
+    {type:"tf", q:"Rivers flow.", a:true}
+  ],
+  "Famous Helpers": [
+    {type:"mc", q:"Who led peaceful marches for fairness?", a:"Dr. Martin Luther King Jr.", choices:["Dr. Martin Luther King Jr.","A cartoon hero","A pirate","A magician"]},
+    {type:"mc", q:"Who was the first U.S. President?", a:"George Washington", choices:["George Washington","Abraham Lincoln","Neil Armstrong","Amelia Earhart"]},
+    {type:"tf", q:"Abraham Lincoln is on a penny.", a:true}
+  ],
+  "School & Classroom": [
+    {type:"tf", q:"We use inside voices in class.", a:true},
+    {type:"mc", q:"Where do you put finished work?", a:"Turn-in tray", choices:["Turn-in tray","Floor","Backpack forever","Trash"]},
+    {type:"tf", q:"Cleaning up is part of our job.", a:true}
+  ],
+  "Communication (Mail/Phone)": [
+    {type:"mc", q:"Who brings the mail?", a:"Mail carrier", choices:["Mail carrier","Pilot","Diver","Dancer"]},
+    {type:"tf", q:"Long ago, phones had cords.", a:true},
+    {type:"tf", q:"A letter needs a stamp.", a:true}
+  ],
+  "Food & Farming": [
+    {type:"mc", q:"Milk comes from…", a:"Cows", choices:["Cows","Cars","Clouds","Crayons"]},
+    {type:"tf", q:"Farmers grow food.", a:true},
+    {type:"mc", q:"Which grows on a plant?", a:"Tomato", choices:["Tomato","Cookie","Ball","Toy car"]}
+  ],
+  "Shelter & Clothing": [
+    {type:"mc", q:"We wear coats when it is…", a:"Cold", choices:["Cold","Hot","Noon","Bedtime"]},
+    {type:"tf", q:"A house is a kind of shelter.", a:true},
+    {type:"tf", q:"Shoes go on our hands.", a:false}
+  ],
+  "Games from the Past": [
+    {type:"mc", q:"Kids long ago played with…", a:"Wooden toys", choices:["Wooden toys","Smartphones","Drones","VR goggles"]},
+    {type:"tf", q:"Marbles is an old game.", a:true}
+  ],
+  "Music & Celebrations": [
+    {type:"mc", q:"At a birthday we often…", a:"Sing", choices:["Sing","Whisper only","Sleep","Hide"]},
+    {type:"tf", q:"Different cultures have different dances.", a:true}
+  ],
+  "Landmarks (basic)": [
+    {type:"mc", q:"Which is a famous big statue?", a:"Statue of Liberty", choices:["Statue of Liberty","Tiny toy","Mailbox","Spoon"]},
+    {type:"tf", q:"A landmark helps people know a special place.", a:true}
+  ],
+  "My Timeline": [
+    {type:"mc", q:"Which comes first?", a:"Breakfast", choices:["Breakfast","Bedtime","Dinner","Midnight snack"]},
+    {type:"tf", q:"First–Next–Last tells order.", a:true}
+  ],
+  // Light review buckets map back to earlier themes automatically:
+  "Transportation (review)": [],
+  "Maps (review)": [],
+  "Rules (review)": [],
+  "Then & Now (review)": [],
+  "Symbols (review)": [],
+  "Our Town Helpers": [], "Nature & Parks": [], "Travel Near/Far": [],
+  "Inventions (simple)": [], "Helping Our Planet": [], "Working Together": [],
+  "Neighborhood History": [], "Holidays (general)": [], "Leaders & Teams": [],
+  "Time Words (review)": [], "Community Stories": [], "Big Feelings & Fair Play": [],
+  "Plan a Class Trip": [], "Year in Review": []
+};
+
+/* Auto-fill review themes by borrowing from base themes */
+const REVIEW_MAP = {
+  "Transportation (review)":"Transportation",
+  "Maps (review)":"Maps & Globes (basic)",
+  "Rules (review)":"Rules & Kindness",
+  "Then & Now (review)":"Then & Now (Old vs New)",
+  "Symbols (review)":"American Symbols",
+  "Our Town Helpers":"Community & Helpers",
+  "Nature & Parks":"Land & Water",
+  "Travel Near/Far":"Transportation",
+  "Inventions (simple)":"Then & Now (Old vs New)",
+  "Helping Our Planet":"Nature & Parks",
+  "Working Together":"Rules & Kindness",
+  "Neighborhood History":"Community & Helpers",
+  "Holidays (general)":"Family & Traditions",
+  "Leaders & Teams":"School & Classroom",
+  "Time Words (review)":"Yesterday • Today • Tomorrow",
+  "Community Stories":"Our Places (Home/School/Library)",
+  "Big Feelings & Fair Play":"Rules & Kindness",
+  "Plan a Class Trip":"Maps & Globes (basic)",
+  "Year in Review":"Symbols (review)"
+};
+Object.entries(REVIEW_MAP).forEach(([k,base])=>{
+  if(QUESTION_BANK[k] && QUESTION_BANK[base]){
+    QUESTION_BANK[k] = QUESTION_BANK[k].concat(QUESTION_BANK[base]);
+  }
+});
+
+/* ----------------- progress model ----------------- */
+const KEY="k_history_progress_v1";
+// PROG = { week1: { Mon:{score:3,done:true,date:...}, Tue:{...} }, week2: {...}, ... }
+let PROG = load(KEY,{});
+function saveProg(){ save(KEY,PROG); renderWeeks(); dump(); }
+
+/* ----------------- UI state ----------------- */
+const DAYS=["Mon","Tue","Wed","Thu","Fri"];
+let curWeek=1, curDay="Mon";
+let quiz=[], qIndex=0, score=0, stickers=[];
+
+/* ----------------- render weeks ----------------- */
+function renderWeeks(){
+  const box=$("#weeks"); box.innerHTML="";
+  for(let i=1;i<=42;i++){
+    const theme=WEEK_THEME[i-1];
+    const wDiv=document.createElement('div'); wDiv.className='wk';
+    const doneCount = (PROG["week"+i] ? DAYS.filter(d=>PROG["week"+i][d]?.done).length : 0);
+    wDiv.innerHTML=`<h3>Week ${i}</h3><small>${theme}</small><div class="star">${doneCount===5?"⭐":"☆"}</div>`;
+    if(i===curWeek) wDiv.classList.add('active');
+    wDiv.onclick=()=>{curWeek=i; renderWeeks(); renderDays(); setLessonNote(); $("#uiWeek").textContent=curWeek; $("#uiTheme").textContent=theme; location.hash="#play"; };
+    box.appendChild(wDiv);
+  }
+}
+function renderDays(){
+  // days row under the plan section
+  let row = document.querySelector("#daysRow");
+  if(!row){ row=document.createElement('div'); row.id="daysRow"; row.className="days"; $("#plan").appendChild(row); }
+  row.innerHTML="";
+  DAYS.forEach(d=>{
+    const b=document.createElement('button'); b.className='day';
+    const done=PROG["week"+curWeek]?.[d]?.done;
+    if(done) b.classList.add('done');
+    b.textContent=d; b.onclick=()=>{curDay=d; $("#uiDay").textContent=curDay; setLessonNote(); location.hash="#play"; };
+    row.appendChild(b);
+  });
+}
+function setLessonNote(){
+  const theme=WEEK_THEME[curWeek-1];
+  $("#weekNote").textContent = `Theme focus: ${theme}.
+Quick idea: Talk about it with real objects or pictures before the quiz.
+Finish all 5 days to star the week!`;
+}
+renderWeeks(); renderDays(); setLessonNote();
+
+/* ----------------- quiz creation ----------------- */
+function buildQuiz(){
+  const theme=WEEK_THEME[curWeek-1];
+  let pool = QUESTION_BANK[theme]||[];
+  // if pool is small, borrow from mapped base theme
+  if(pool.length<3 && REVIEW_MAP[theme]) pool = pool.concat(QUESTION_BANK[REVIEW_MAP[theme]]||[]);
+  // final fallback: borrow from a few core sets
+  if(pool.length<3) pool = pool.concat(
+    QUESTION_BANK["Community & Helpers"],
+    QUESTION_BANK["Rules & Kindness"],
+    QUESTION_BANK["Maps & Globes (basic)"]
+  );
+  // ensure mix: at least one TF if available
+  const tf = pool.filter(x=>x.type==="tf");
+  const mc = pool.filter(x=>x.type==="mc");
+  let pickSet=[];
+  if(tf.length && mc.length>=2){
+    pickSet = [ pick(tf,1)[0], ...pick(mc,2) ];
+  }else{
+    pickSet = pick(pool,3);
+  }
+  return shuffle(pickSet);
+}
+
+/* ----------------- play flow ----------------- */
+function renderQuestion(){
+  const q=quiz[qIndex];
+  $("#qNum").textContent = (qIndex+1);
+  $("#qText").textContent = q.q;
+  $("#qMsg").textContent = "";
+  const box=$("#qOptions"); box.innerHTML="";
+  if(q.type==="tf"){
+    ["True","False"].forEach(lbl=>{
+      const btn=document.createElement('button'); btn.className='opt'; btn.textContent=lbl;
+      btn.onclick=()=>grade(lbl=== "True");
+      box.appendChild(btn);
+    });
+  }else{
+    const opts = shuffle([q.a, ...q.choices.filter(c=>c!==q.a)]);
+    opts.forEach(o=>{
+      const btn=document.createElement('button'); btn.className='opt'; btn.textContent=o;
+      btn.onclick=()=>grade(o);
+      box.appendChild(btn);
+    });
+  }
+  $("#btnNext").disabled=true; $("#btnFinish").disabled=true;
+}
+function grade(choice){
+  const q=quiz[qIndex];
+  const box=$("#qOptions");
+  [...box.children].forEach(b=>{
+    const good = (q.type==="tf") ? ((b.textContent==="True")===q.a) : (b.textContent===q.a);
+    b.classList.add(good?"correct":"wrong");
+    b.disabled=true;
+  });
+  const isCorrect = (q.type==="tf") ? (choice===q.a) : (choice===q.a);
+  if(isCorrect){ score++; $("#score").textContent=score; $("#qMsg").textContent="✅ Great job!"; earnSticker(); }
+  else { $("#qMsg").textContent="✨ Nice try!"; }
+  $("#btnNext").disabled = !(qIndex<2);
+  $("#btnFinish").disabled = (qIndex<2);
+}
+function earnSticker(){
+  const set=["⭐","🎈","🎉","🏆","🦅","🚌","📚","🗺️","🚒","🎨"];
+  const s = set[Math.floor(Math.random()*set.length)];
+  stickers.push(s); $("#stickers").textContent = stickers.join(" ");
+}
+function finishDay(){
+  const wk="week"+curWeek; PROG[wk] ||= {};
+  PROG[wk][curDay] = {score, done:true, date:new Date().toISOString()};
+  saveProg(); renderWeeks(); renderDays();
+  $("#qText").textContent = `Hooray! You finished ${curDay} (Week ${curWeek}) — Score ${score}/3`;
+  $("#qOptions").innerHTML=""; $("#qMsg").textContent="Come back tomorrow for more!";
+  $("#btnNext").disabled=true; $("#btnFinish").disabled=true;
+}
+$("#btnStart").onclick=()=>{
+  stickers=[]; $("#stickers").textContent=""; score=0; $("#score").textContent=0; qIndex=0;
+  quiz = buildQuiz(); renderQuestion();
+};
+$("#btnNext").onclick=()=>{ if(qIndex<2){ qIndex++; renderQuestion(); } };
+$("#btnFinish").onclick=finishDay;
+
+/* ----------------- teacher tools ----------------- */
+function dump(){ $("#dump").textContent = JSON.stringify(PROG,null,2); }
+$("#goJump").onclick=()=>{ const w=Number($("#jumpWeek").value||1); const d=$("#jumpDay").value||"Mon";
+  if(w<1||w>42) return toast("Enter week 1–42");
+  curWeek=w; curDay=d; renderWeeks(); renderDays(); setLessonNote();
+  $("#uiWeek").textContent=curWeek; $("#uiDay").textContent=curDay; $("#uiTheme").textContent=WEEK_THEME[curWeek-1];
+  location.hash="#play";
+};
+$("#exportBtn").onclick=()=>{ dump(); const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([$("#dump").textContent],{type:"application/json"}));
+  a.download=`KinderHistory_Progress_${Date.now()}.json`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+};
+$("#resetBtn").onclick=()=>{ if(confirm("Reset all progress for the year?")){ PROG={}; saveProg(); toast("Progress reset"); } };
+dump();
+
+/* ----------------- accessibility niceties ----------------- */
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter' && !$("#btnFinish").disabled && $("#qMsg").textContent) finishDay();
+});
+</script>
+</body>
+</html>
