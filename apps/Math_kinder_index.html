@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🌈 Math Garden Quest</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --bg1:#ffecd2;
+  --bg2:#fcb69f;
+  --panel:#ffffff;
+  --accent:#7c3aed;
+  --happy:#22c55e;
+  --warn:#f97316;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  font-family:"Comic Sans MS","Arial Rounded MT Bold",sans-serif;
+  background:linear-gradient(135deg,var(--bg1),var(--bg2));
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+#app{
+  background:var(--panel);
+  border-radius:30px;
+  padding:20px;
+  width:95%;
+  max-width:520px;
+  box-shadow:0 20px 40px rgba(0,0,0,.2);
+  text-align:center;
+}
+
+h1{
+  margin:0 0 10px;
+  color:var(--accent);
+}
+
+#garden{
+  font-size:48px;
+  margin:10px 0;
+}
+
+#focus{
+  margin:10px 0;
+  font-size:18px;
+}
+
+#card{
+  background:#fff7ed;
+  border:4px dashed var(--accent);
+  border-radius:20px;
+  padding:20px;
+  margin:15px 0;
+  font-size:28px;
+}
+
+.answers{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+
+button{
+  font-size:22px;
+  padding:14px;
+  border:none;
+  border-radius:16px;
+  cursor:pointer;
+  background:#fde68a;
+}
+
+button:hover{background:#fcd34d;}
+
+#message{
+  margin-top:15px;
+  font-size:20px;
+  min-height:28px;
+}
+
+#stars{
+  margin-top:8px;
+  font-size:22px;
+}
+</style>
+</head>
+
+<body>
+<div id="app">
+  <h1>🌈 Math Garden Quest</h1>
+
+  <div id="garden">🌱</div>
+
+  <div id="focus">Focus Meter: 🐢</div>
+
+  <div id="card">Loading…</div>
+
+  <div class="answers" id="answers"></div>
+
+  <div id="message"></div>
+  <div id="stars">⭐ 0</div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* -------------------------
+   STATE
+-------------------------- */
+let stars = 0;
+let streak = 0;
+let focus = 2; // 1–5
+
+/* -------------------------
+   RANDOM (SAFE)
+-------------------------- */
+function rand(min,max){
+  const lo=Math.min(min,max), hi=Math.max(min,max);
+  return Math.floor(Math.random()*(hi-lo+1))+lo;
+}
+
+/* -------------------------
+   CHALLENGE POOL (50 TOTAL)
+-------------------------- */
+const challenges = [
+  // COUNTING (1–5)
+  {type:"count", min:1, max:3, urgency:5, care:5, reward:4},
+  {type:"count", min:1, max:4, urgency:5, care:5, reward:4},
+  {type:"count", min:1, max:5, urgency:5, care:5, reward:4},
+  {type:"count", min:2, max:5, urgency:4, care:5, reward:4},
+  {type:"count", min:3, max:5, urgency:4, care:4, reward:4},
+
+  // COUNTING (1–10)
+  {type:"count", min:1, max:6, urgency:4, care:4, reward:4},
+  {type:"count", min:1, max:7, urgency:4, care:4, reward:4},
+  {type:"count", min:1, max:8, urgency:4, care:4, reward:4},
+  {type:"count", min:1, max:9, urgency:3, care:4, reward:4},
+  {type:"count", min:1, max:10, urgency:3, care:4, reward:5},
+
+  // COUNTING (mixed ranges)
+  {type:"count", min:2, max:6, urgency:3, care:4, reward:4},
+  {type:"count", min:3, max:7, urgency:3, care:3, reward:4},
+  {type:"count", min:4, max:8, urgency:3, care:3, reward:4},
+  {type:"count", min:5, max:9, urgency:2, care:3, reward:4},
+  {type:"count", min:6, max:10, urgency:2, care:3, reward:5},
+
+  // ADDITION (1–5)
+  {type:"add", min:1, max:3, urgency:4, care:4, reward:5},
+  {type:"add", min:1, max:4, urgency:4, care:4, reward:5},
+  {type:"add", min:1, max:5, urgency:4, care:3, reward:5},
+  {type:"add", min:2, max:5, urgency:4, care:3, reward:5},
+  {type:"add", min:3, max:5, urgency:3, care:3, reward:5},
+
+  // ADDITION (1–10)
+  {type:"add", min:1, max:6, urgency:3, care:3, reward:5},
+  {type:"add", min:1, max:7, urgency:3, care:3, reward:5},
+  {type:"add", min:1, max:8, urgency:3, care:2, reward:5},
+  {type:"add", min:1, max:9, urgency:2, care:2, reward:5},
+  {type:"add", min:1, max:10, urgency:2, care:2, reward:5},
+
+  // SUBTRACTION (1–5)
+  {type:"sub", min:1, max:3, urgency:3, care:4, reward:4},
+  {type:"sub", min:1, max:4, urgency:3, care:4, reward:4},
+  {type:"sub", min:1, max:5, urgency:3, care:3, reward:4},
+  {type:"sub", min:2, max:5, urgency:3, care:3, reward:4},
+  {type:"sub", min:3, max:5, urgency:2, care:3, reward:4},
+
+  // SUBTRACTION (1–10)
+  {type:"sub", min:1, max:6, urgency:2, care:3, reward:4},
+  {type:"sub", min:1, max:7, urgency:2, care:3, reward:4},
+  {type:"sub", min:1, max:8, urgency:2, care:2, reward:4},
+  {type:"sub", min:1, max:9, urgency:1, care:2, reward:4},
+  {type:"sub", min:1, max:10, urgency:1, care:2, reward:5},
+
+  // MIXED / REVIEW (gentle challenge)
+  {type:"count", min:7, max:12, urgency:1, care:2, reward:5},
+  {type:"add", min:5, max:10, urgency:1, care:2, reward:5},
+  {type:"sub", min:5, max:10, urgency:1, care:2, reward:5},
+  {type:"count", min:10, max:15, urgency:1, care:1, reward:6},
+  {type:"add", min:3, max:7, urgency:1, care:1, reward:6}
+];
+
+/* -------------------------
+   PICK NEXT CHALLENGE
+   (Your task logic adapted)
+-------------------------- */
+function pickChallenge(){
+  let best=null, bestScore=Infinity;
+
+  for(let i=0;i<200;i++){
+    const c = challenges[rand(0,challenges.length-1)];
+
+    const difficulty = (c.max>5?4:2);
+    const energyMismatch = Math.abs(difficulty - focus);
+
+    const score =
+      (6-c.urgency)*1.2 +
+      energyMismatch*2 -
+      c.care*(6-focus)*0.5 -
+      c.reward;
+
+    if(score<bestScore){
+      bestScore=score;
+      best=c;
+    }
+  }
+  return best;
+}
+
+/* -------------------------
+   GENERATE PROBLEM WITH APPLES
+-------------------------- */
+function generate(){
+  const c = pickChallenge();
+  let question, answer, visual="";
+
+  if(c.type==="count"){
+    answer = rand(c.min,c.max);
+    question = `How many apples? 🍎`;
+
+    // Create visual manipulatives
+    for(let i=0;i<answer;i++){
+      visual += "🍎 ";
+    }
+  }
+  if(c.type==="add"){
+    const a=rand(1,c.max), b=rand(1,c.max);
+    answer = a+b;
+    question = `${a} + ${b} = ?`;
+    visual = "🍎".repeat(a) + " + " + "🍎".repeat(b);
+  }
+  if(c.type==="sub"){
+    const a=rand(2,c.max), b=rand(1,a);
+    answer = a-b;
+    question = `${a} − ${b} = ?`;
+    visual = "🍎".repeat(a) + " − " + "🍎".repeat(b);
+  }
+
+  return {question, answer, visual};
+}
+
+/* -------------------------
+   RENDER PROBLEM
+-------------------------- */
+function render(){
+  const prob = generate();
+  const card = document.getElementById("card");
+  const box = document.getElementById("answers");
+
+  // Display question
+  card.innerHTML = prob.question + "<br>" + prob.visual;
+
+  // Generate options
+  const correct = prob.answer;
+  const opts = new Set([correct]);
+  while(opts.size<4){
+    const delta = rand(-3,3);
+    if(correct+delta>0) opts.add(correct+delta);
+  }
+
+  const arr = [...opts].sort(()=>Math.random()-.5);
+  box.innerHTML="";
+
+  arr.forEach(v=>{
+    const b=document.createElement("button");
+    b.textContent=v;
+    b.onclick=()=>check(v===correct);
+    box.appendChild(b);
+  });
+}
+
+/* -------------------------
+   FEEDBACK LOOP
+-------------------------- */
+function check(ok){
+  const msg=document.getElementById("message");
+
+  if(ok){
+    stars++;
+    streak++;
+    focus=Math.min(5,focus+0.2);
+    msg.textContent="🎉 Great job!";
+  }else{
+    streak=0;
+    focus=Math.max(1,focus-0.4);
+    msg.textContent="🌼 Nice try! Let’s keep going!";
+  }
+
+  updateGarden();
+  render();
+}
+
+/* -------------------------
+   GARDEN PROGRESSION
+-------------------------- */
+function updateGarden(){
+  const g=document.getElementById("garden");
+  if(stars<5) g.textContent="🌱";
+  else if(stars<10) g.textContent="🌷";
+  else if(stars<20) g.textContent="🌻";
+  else g.textContent="🌳";
+
+  document.getElementById("stars").textContent=`⭐ ${stars}`;
+
+  const focusIcons=["🐢","🐢","🙂","🚀","🚀"];
+  document.getElementById("focus").textContent=
+    "Focus Meter: "+focusIcons[Math.round(focus)-1];
+}
+
+/* -------------------------
+   START
+-------------------------- */
+render();
+})();
+</script>
+</body>
+</html>
